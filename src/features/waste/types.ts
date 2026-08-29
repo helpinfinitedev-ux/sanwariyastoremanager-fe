@@ -4,7 +4,7 @@ export interface WasteQueryParams {
   page?: number;
   pageSize?: number;
   search?: string;
-  reason?: 'Expired' | 'Spoiled' | 'Damaged' | 'Overproduction' | 'Other' | '';
+  reason?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -12,7 +12,7 @@ export interface WasteQueryParams {
 export interface CreateWasteDto {
   productId: string;
   quantity: number;
-  reason: 'Expired' | 'Spoiled' | 'Damaged' | 'Overproduction' | 'Other';
+  reason: string;
   notes?: string;
   photoUrl?: string;
 }

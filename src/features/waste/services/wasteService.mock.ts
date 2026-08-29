@@ -1,4 +1,4 @@
-import { db, simulateDelay, WasteEntry } from '../../../shared/mock/mockDb';
+import { db, simulateDelay, WasteEntry, WasteReason } from '../../../shared/mock/mockDb';
 import { WasteQueryParams, CreateWasteDto } from '../types';
 import { PaginatedResponse } from '../../../shared/types/common';
 import dayjs from 'dayjs';
@@ -73,4 +73,14 @@ export async function createWasteEntry(dto: CreateWasteDto): Promise<WasteEntry>
   if (!dto.reason) throw new Error('Waste reason is required');
 
   return db.createWasteEntry(dto as any);
+}
+
+export async function getWasteReasons(): Promise<WasteReason[]> {
+  await simulateDelay(150);
+  return db.wasteReasons;
+}
+
+export async function createWasteReason(reason: WasteReason): Promise<WasteReason> {
+  await simulateDelay(300);
+  return db.createWasteReason(reason);
 }

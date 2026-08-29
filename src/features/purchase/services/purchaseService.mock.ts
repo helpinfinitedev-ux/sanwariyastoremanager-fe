@@ -1,4 +1,4 @@
-import { db, simulateDelay, Purchase } from '../../../shared/mock/mockDb';
+import { db, simulateDelay, Purchase, Vendor } from '../../../shared/mock/mockDb';
 import { PurchaseQueryParams, CreatePurchaseDto, UpdatePurchaseDto } from '../types';
 import { PaginatedResponse } from '../../../shared/types/common';
 import dayjs from 'dayjs';
@@ -104,4 +104,9 @@ export async function updatePurchase(id: string, dto: UpdatePurchaseDto): Promis
 export async function getVendorsList() {
   await simulateDelay(200);
   return db.vendors;
+}
+
+export async function createSupplier(vendorData: Omit<Vendor, 'id' | 'code'>): Promise<Vendor> {
+  await simulateDelay(300);
+  return db.createSupplier(vendorData);
 }

@@ -55,8 +55,8 @@ export async function getPurchaseReport(startDate: string, endDate: string): Pro
   const uniqueVendors = new Set(purchases.map(p => p.vendorId)).size;
 
   const kpis: ReportSummaryKpi[] = [
-    { label: 'Total Inflow Spent', value: `$${totalSpent.toFixed(2)}`, icon: 'cash-outline' },
-    { label: 'Average Order Rate', value: `$${avgOrder.toFixed(2)}`, icon: 'calculator-outline' },
+    { label: 'Total Inflow Spent', value: `₹${totalSpent.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: 'cash-outline' },
+    { label: 'Average Order Rate', value: `₹${avgOrder.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: 'calculator-outline' },
     { label: 'Purchases Count', value: purchases.length, icon: 'receipt-outline' },
     { label: 'Active Vendors Ordered', value: uniqueVendors, icon: 'people-outline' },
   ];
@@ -94,7 +94,7 @@ export async function getInventoryReport(): Promise<InventoryReportData> {
 
   const kpis: ReportSummaryKpi[] = [
     { label: 'Total SKU Range', value: metrics.totalItems, icon: 'cube-outline' },
-    { label: 'Total Stock Valuation', value: `$${metrics.totalValue.toFixed(2)}`, icon: 'trending-up-outline' },
+    { label: 'Total Stock Valuation', value: `₹${metrics.totalValue.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: 'trending-up-outline' },
     { label: 'Low Stock SKU Warning', value: metrics.lowStockCount, icon: 'warning-outline' },
     { label: 'Out of Stock SKU Alert', value: metrics.outOfStockCount, icon: 'alert-circle-outline' },
   ];
@@ -187,9 +187,9 @@ export async function getWasteReport(startDate: string, endDate: string): Promis
   const avgLoss = totalRecords ? (totalLoss / totalRecords) : 0;
 
   const kpis: ReportSummaryKpi[] = [
-    { label: 'Total Financial Loss', value: `$${totalLoss.toFixed(2)}`, icon: 'alert-circle-outline' },
+    { label: 'Total Financial Loss', value: `₹${totalLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: 'alert-circle-outline' },
     { label: 'Waste Logs Logged', value: totalRecords, icon: 'trash-outline' },
-    { label: 'Average Cost Per Loss', value: `$${avgLoss.toFixed(2)}`, icon: 'calculator-outline' },
+    { label: 'Average Cost Per Loss', value: `₹${avgLoss.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: 'calculator-outline' },
   ];
 
   // Group value lost by reason category for chart

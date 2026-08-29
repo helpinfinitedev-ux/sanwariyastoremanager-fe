@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useKitchenIssueReport } from '../hooks/useReports';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -16,6 +17,7 @@ import { formatDate } from '../../../shared/utils/formatters';
 
 export const KitchenIssueReportScreen: React.FC = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
 
   // Date filters
   const [startDate, setStartDate] = useState(() => {
@@ -55,6 +57,10 @@ export const KitchenIssueReportScreen: React.FC = () => {
   if (isError || !data) {
     return (
       <ScreenContainer title="Kitchen Dispatch Report">
+        <PageHeader
+          title="Kitchen Dispatch Report"
+          onBack={() => navigation.goBack()}
+        />
         <ErrorState message="Could not compile kitchen issue report." onRetry={refetch} />
       </ScreenContainer>
     );
@@ -63,7 +69,11 @@ export const KitchenIssueReportScreen: React.FC = () => {
   return (
     <ScreenContainer title="Kitchen Dispatch Report">
       <ScrollView contentContainerStyle={styles.scrollBody}>
-        <PageHeader title="Kitchen Dispatch Analytics" subtitle="Report on material dispatches and section consumptions">
+        <PageHeader
+          title="Kitchen Dispatch Analytics"
+          subtitle="Report on material dispatches and section consumptions"
+          onBack={() => navigation.goBack()}
+        >
           <ExportButton reportName="Kitchen Dispatch Report" />
         </PageHeader>
 
@@ -136,11 +146,12 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    marginHorizontal: -spacing.sm,
   },
   filterCol: {
     flex: 1,
     minWidth: 200,
+    paddingHorizontal: spacing.sm,
   },
   kpiRow: {
     flexDirection: 'row',

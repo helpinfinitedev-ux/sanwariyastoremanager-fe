@@ -1,4 +1,4 @@
-import { db, simulateDelay, Product } from '../../../shared/mock/mockDb';
+import { db, simulateDelay, Product, Category, Unit, StorageLocation, Brand } from '../../../shared/mock/mockDb';
 import { PaginatedResponse } from '../../../shared/types/common';
 import { getStockStatus } from '../../../shared/utils/calculations';
 
@@ -69,4 +69,52 @@ export async function getProductById(id: string): Promise<Product> {
 export async function getAllProductsRaw() {
   await simulateDelay(100);
   return db.products;
+}
+
+export async function getCategories(): Promise<Category[]> {
+  await simulateDelay(150);
+  return db.categories;
+}
+
+export async function getUnits(): Promise<Unit[]> {
+  await simulateDelay(150);
+  return db.units;
+}
+
+export async function getStorageLocations(): Promise<StorageLocation[]> {
+  await simulateDelay(150);
+  return db.storageLocations;
+}
+
+export async function getBrands(): Promise<Brand[]> {
+  await simulateDelay(150);
+  return db.brands;
+}
+
+export async function createCategory(category: Category): Promise<Category> {
+  await simulateDelay(300);
+  return db.createCategory(category);
+}
+
+export async function createUnit(unit: Unit): Promise<Unit> {
+  await simulateDelay(300);
+  return db.createUnit(unit);
+}
+
+export async function createStorageLocation(location: StorageLocation): Promise<StorageLocation> {
+  await simulateDelay(300);
+  return db.createStorageLocation(location);
+}
+
+export async function createProduct(productData: {
+  name: string;
+  category: string;
+  unit: string;
+  minStock?: number;
+  purchaseCost?: number;
+  brand?: string;
+  storageLocation?: string;
+}): Promise<Product> {
+  await simulateDelay(300);
+  return db.createProduct(productData);
 }

@@ -19,6 +19,7 @@ export interface CreatePurchaseDto {
   deliveryDate: string;
   status: 'Draft' | 'Submitted';
   notes?: string;
+  photoUrl?: string;
   items: Array<{
     productId: string;
     quantity: number;

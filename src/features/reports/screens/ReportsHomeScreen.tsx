@@ -1,6 +1,7 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
@@ -8,18 +9,21 @@ import PageHeader from '../../../shared/components/layout/PageHeader';
 import Card from '../../../shared/components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { ROUTES } from '../../../shared/constants/routes';
+import { ReportsStackParamList } from '../../../app/navigation/types';
+
+type NavigationProp = NativeStackNavigationProp<ReportsStackParamList>;
 
 interface ReportOption {
   title: string;
   desc: string;
-  route: string;
+  route: keyof ReportsStackParamList;
   icon: keyof typeof Ionicons.glyphMap;
   iconColor: string;
 }
 
 export const ReportsHomeScreen: React.FC = () => {
   const { colors } = useTheme();
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NavigationProp>();
   const { width } = useWindowDimensions();
 
   const isDesktop = width >= 768;
@@ -28,28 +32,28 @@ export const ReportsHomeScreen: React.FC = () => {
     {
       title: 'Restock Purchases Report',
       desc: 'Analyze money spent on restocking, order sizes, and vendor billing trends.',
-      route: ROUTES.REPORTS_SCREENS.PURCHASE,
+      route: ROUTES.REPORTS_SCREENS.PURCHASE as keyof ReportsStackParamList,
       icon: 'receipt',
       iconColor: colors.success,
     },
     {
       title: 'Inventory Valuation Report',
       desc: 'Audit real-time asset value distributions across products and storage categories.',
-      route: ROUTES.REPORTS_SCREENS.INVENTORY,
+      route: ROUTES.REPORTS_SCREENS.INVENTORY as keyof ReportsStackParamList,
       icon: 'cube',
       iconColor: colors.primary,
     },
     {
       title: 'Kitchen Dispatch Report',
       desc: 'Verify ingredient outflow rates and section usages over time.',
-      route: ROUTES.REPORTS_SCREENS.KITCHEN_ISSUE,
+      route: ROUTES.REPORTS_SCREENS.KITCHEN_ISSUE as keyof ReportsStackParamList,
       icon: 'restaurant',
       iconColor: colors.info,
     },
     {
       title: 'Waste & Loss Report',
       desc: 'Analyze food waste statistics, spoiled value metrics, and loss reason codes.',
-      route: ROUTES.REPORTS_SCREENS.WASTE,
+      route: ROUTES.REPORTS_SCREENS.WASTE as keyof ReportsStackParamList,
       icon: 'trash',
       iconColor: colors.danger,
     },
@@ -65,13 +69,14 @@ export const ReportsHomeScreen: React.FC = () => {
 
         <View style={styles.grid}>
           {reports.map((rep) => (
-            <TouchableOpacity
+            <View
               key={rep.route}
-              activeOpacity={0.8}
-              onPress={() => navigation.navigate(rep.route)}
               style={[styles.itemWrapper, { width: isDesktop ? '48%' : '100%' }]}
             >
-              <Card style={styles.card}>
+              <Card
+                onPress={() => navigation.navigate(rep.route as any)}
+                style={styles.card}
+              >
                 <View style={[styles.iconBg, { backgroundColor: rep.iconColor + '15' }]}>
                   <Ionicons name={rep.icon} size={24} color={rep.iconColor} />
                 </View>
@@ -81,7 +86,7 @@ export const ReportsHomeScreen: React.FC = () => {
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
               </Card>
-            </TouchableOpacity>
+            </View>
           ))}
         </View>
       </ScrollView>
@@ -107,6 +112,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: spacing.lg,
     gap: spacing.md,
+    cursor: 'pointer' as any,
   },
   iconBg: {
     width: 48,

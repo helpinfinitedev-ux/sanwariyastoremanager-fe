@@ -31,6 +31,7 @@ export const EditPurchaseScreen: React.FC = () => {
       deliveryDate: values.deliveryDate || '',
       status: values.status,
       notes: values.notes || '',
+      photoUrl: values.photoUrl || '',
       items: values.items.map(item => ({
         productId: item.productId,
         quantity: Number(item.quantity),
@@ -77,6 +78,7 @@ export const EditPurchaseScreen: React.FC = () => {
     deliveryDate: purchase.deliveryDate ? purchase.deliveryDate.split('T')[0] : '',
     status: purchase.status,
     notes: purchase.notes,
+    photoUrl: purchase.photoUrl || '',
     items: purchase.items.map(item => ({
       productId: item.productId,
       quantity: item.quantity,

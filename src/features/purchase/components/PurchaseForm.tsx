@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -14,6 +14,8 @@ import Button from '../../../shared/components/ui/Button';
 import Card from '../../../shared/components/ui/Card';
 import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '../../../shared/utils/formatters';
+import CreatableSelect from '../../../shared/components/ui/CreatableSelect';
+import IngredientCreateModal from '../../../shared/components/modals/IngredientCreateModal';
 
 const purchaseItemSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
@@ -22,12 +24,13 @@ const purchaseItemSchema = z.object({
 });
 
 const purchaseSchema = z.object({
-  invoiceNo: z.string().min(1, 'Invoice Number is required'),
-  vendorId: z.string().min(1, 'Vendor is required'),
+  invoiceNo: z.string().optional(),
+  vendorId: z.string().optional(),
   orderDate: z.string().min(1, 'Order Date is required'),
   deliveryDate: z.string().optional(),
   status: z.enum(['Draft', 'Submitted']),
   notes: z.string().optional(),
+  photoUrl: z.string().optional(),
   items: z.array(purchaseItemSchema).min(1, 'At least one line item is required'),
 });
 
@@ -49,6 +52,22 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
   const { colors } = useTheme();
   const { data: vendors } = useVendors();
   const { data: products } = useAllProductsRaw();
+  const fileInputRef = useRef<any>(null);
+
+  const [ingModalVisible, setIngModalVisible] = useState(false);
+  const [typedProductName, setTypedProductName] = useState('');
+  const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
+
+  const handleFileChange = (e: any, onChange: (val: string) => void) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        onChange(event.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   const {
     control,
@@ -65,6 +84,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
       deliveryDate: '',
       status: 'Draft',
       notes: '',
+      photoUrl: '',
       items: [{ productId: '', quantity: 1, unitCost: 1.0 }],
       ...initialValues,
     },
@@ -114,44 +134,10 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
           <View style={styles.formCol}>
             <Controller
               control={control}
-              name="invoiceNo"
-              render={({ field: { onChange, value } }) => (
-                <Input
-                  label="Invoice Reference No *"
-                  placeholder="e.g. INV-2026-901"
-                  value={value}
-                  onChangeText={onChange}
-                  error={errors.invoiceNo?.message}
-                  disabled={isEdit} // don't edit invoice no once set
-                />
-              )}
-            />
-          </View>
-          <View style={styles.formCol}>
-            <Controller
-              control={control}
-              name="vendorId"
-              render={({ field: { onChange, value } }) => (
-                <Select
-                  label="Vendor Partner *"
-                  options={vendorOptions}
-                  selectedValue={value}
-                  onValueChange={onChange}
-                  error={errors.vendorId?.message}
-                />
-              )}
-            />
-          </View>
-        </View>
-
-        <View style={styles.formRow}>
-          <View style={styles.formCol}>
-            <Controller
-              control={control}
               name="orderDate"
               render={({ field: { onChange, value } }) => (
                 <DatePicker
-                  label="Order / Purchase Date *"
+                  label="Purchase Date *"
                   value={value}
                   onChange={onChange}
                   error={errors.orderDate?.message}
@@ -171,6 +157,68 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
                   error={errors.deliveryDate?.message}
                 />
               )}
+            />
+          </View>
+        </View>
+
+        <View style={styles.formRow}>
+          <View style={styles.formCol}>
+            <Controller
+              control={control}
+              name="photoUrl"
+              render={({ field: { onChange, value } }) => {
+                const triggerUpload = () => {
+                  if (Platform.OS === 'web') {
+                    fileInputRef.current?.click();
+                  } else {
+                    onChange('https://images.unsplash.com/photo-1554415707-6e8cfc93fe23?w=500&q=80');
+                  }
+                };
+
+                return (
+                  <View style={styles.uploadWrapper}>
+                    <Text style={[styles.uploadLabel, { color: colors.textSecondary }]}>Invoice Photo Attachment</Text>
+                    {Platform.OS === 'web' && (
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={(e) => handleFileChange(e, onChange)}
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                      />
+                    )}
+                    {value ? (
+                      <View style={[styles.previewContainer, { borderColor: colors.border, backgroundColor: colors.surfaceHover }]}>
+                        <Image source={{ uri: value }} style={styles.previewImage} resizeMode="cover" />
+                        <View style={styles.previewDetails}>
+                          <Text style={[styles.previewTitle, { color: colors.text }]} numberOfLines={1}>
+                            Invoice Photo Uploaded
+                          </Text>
+                          <Text style={[styles.previewSubtitle, { color: colors.textSecondary }]}>
+                            Ready to save
+                          </Text>
+                        </View>
+                        <Button
+                          title="Remove"
+                          onPress={() => onChange('')}
+                          variant="outline"
+                          size="sm"
+                          style={styles.removePhotoBtn}
+                        />
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={[styles.uploadBox, { borderColor: colors.border, backgroundColor: colors.background }]}
+                        onPress={triggerUpload}
+                      >
+                        <Ionicons name="cloud-upload-outline" size={24} color={colors.primary} />
+                        <Text style={[styles.uploadText, { color: colors.text }]}>Upload Invoice Photo</Text>
+                        <Text style={[styles.uploadSubtext, { color: colors.textSecondary }]}>Supports PNG, JPG, JPEG (Max 5MB)</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              }}
             />
           </View>
         </View>
@@ -206,11 +254,17 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
                     control={control}
                     name={`items.${index}.productId`}
                     render={({ field: { value } }) => (
-                      <Select
+                      <CreatableSelect
                         label="Product"
                         options={productOptions}
                         selectedValue={value}
                         onValueChange={(val) => handleProductChange(index, val)}
+                        onCreate={(search) => {
+                          setTypedProductName(search);
+                          setActiveItemIndex(index);
+                          setIngModalVisible(true);
+                        }}
+                        createLabel="+ Add New Ingredient"
                         error={errors.items?.[index]?.productId?.message}
                       />
                     )}
@@ -337,6 +391,17 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
           />
         </View>
       </Card>
+
+      <IngredientCreateModal
+        visible={ingModalVisible}
+        onClose={() => setIngModalVisible(false)}
+        initialName={typedProductName}
+        onSuccess={(productId) => {
+          if (activeItemIndex !== null) {
+            handleProductChange(activeItemIndex, productId);
+          }
+        }}
+      />
     </ScrollView>
   );
 };
@@ -475,6 +540,60 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: 180,
     height: 40,
+  },
+  uploadWrapper: {
+    marginBottom: spacing.md,
+    width: '100%',
+  },
+  uploadLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginBottom: spacing.xs,
+  },
+  uploadBox: {
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    borderRadius: 8,
+    padding: spacing.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+  },
+  uploadText: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  uploadSubtext: {
+    fontSize: 11,
+  },
+  previewContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: spacing.sm,
+  },
+  previewImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 6,
+  },
+  previewDetails: {
+    flex: 1,
+    gap: 2,
+  },
+  previewTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  previewSubtitle: {
+    fontSize: 11,
+  },
+  removePhotoBtn: {
+    height: 32,
+    paddingHorizontal: spacing.sm,
   },
 });
 

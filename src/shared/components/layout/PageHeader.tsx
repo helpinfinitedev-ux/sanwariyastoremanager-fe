@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
 import Button from '../ui/Button';
+import { Ionicons } from '@expo/vector-icons';
 
 interface PageHeaderProps {
   title: string;
   subtitle?: string;
+  onBack?: () => void;
   primaryAction?: {
     title: string;
     onPress: () => void;
@@ -19,6 +21,7 @@ interface PageHeaderProps {
 export const PageHeader: React.FC<PageHeaderProps> = ({
   title,
   subtitle,
+  onBack,
   primaryAction,
   style,
   children,
@@ -28,12 +31,32 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <View style={[styles.container, { borderBottomColor: colors.border }, style]}>
       <View style={styles.leftSection}>
-        <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
-        {subtitle && (
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            {subtitle}
-          </Text>
+        {onBack && (
+          <TouchableOpacity
+            onPress={onBack}
+            activeOpacity={0.7}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: colors.surfaceHover,
+                borderColor: colors.border,
+              },
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+          >
+            <Ionicons name="arrow-back" size={16} color={colors.text} />
+            <Text style={[styles.backButtonText, { color: colors.text }]}>Back</Text>
+          </TouchableOpacity>
         )}
+        <View style={styles.titleWrapper}>
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
+          {subtitle && (
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+              {subtitle}
+            </Text>
+          )}
+        </View>
       </View>
 
       <View style={styles.rightSection}>
@@ -63,6 +86,27 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   leftSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    flex: 1,
+    minWidth: 260,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: spacing.sm + 4,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    cursor: 'pointer' as any,
+  },
+  backButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  titleWrapper: {
     justifyContent: 'center',
   },
   title: {
@@ -78,6 +122,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    flexWrap: 'wrap',
   },
 });
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useWasteReport } from '../hooks/useReports';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -16,6 +17,7 @@ import { formatCurrency, formatDate } from '../../../shared/utils/formatters';
 
 export const WasteReportScreen: React.FC = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
 
   // Date range filters
   const [startDate, setStartDate] = useState(() => {
@@ -66,6 +68,10 @@ export const WasteReportScreen: React.FC = () => {
   if (isError || !data) {
     return (
       <ScreenContainer title="Waste Loss Report">
+        <PageHeader
+          title="Waste Loss Report"
+          onBack={() => navigation.goBack()}
+        />
         <ErrorState message="Could not compile waste report statistics." onRetry={refetch} />
       </ScreenContainer>
     );
@@ -74,7 +80,11 @@ export const WasteReportScreen: React.FC = () => {
   return (
     <ScreenContainer title="Waste Report">
       <ScrollView contentContainerStyle={styles.scrollBody}>
-        <PageHeader title="Spoilage & Waste Loss Analytics" subtitle="Report on material shrinkage, decay, and direct financial losses">
+        <PageHeader
+          title="Spoilage & Waste Loss Analytics"
+          subtitle="Report on material shrinkage, decay, and direct financial losses"
+          onBack={() => navigation.goBack()}
+        >
           <ExportButton reportName="Waste Loss Report" />
         </PageHeader>
 
@@ -147,11 +157,12 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    marginHorizontal: -spacing.sm,
   },
   filterCol: {
     flex: 1,
     minWidth: 200,
+    paddingHorizontal: spacing.sm,
   },
   kpiRow: {
     flexDirection: 'row',

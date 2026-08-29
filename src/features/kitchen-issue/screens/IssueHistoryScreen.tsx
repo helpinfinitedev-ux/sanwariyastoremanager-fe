@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useIssueHistory } from '../hooks/useKitchenIssues';
+import { useIssueHistory, useKitchens } from '../hooks/useKitchenIssues';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
@@ -14,7 +14,7 @@ import Drawer from '../../../shared/components/ui/Drawer';
 import Select from '../../../shared/components/ui/Select';
 import DatePicker from '../../../shared/components/ui/DatePicker';
 import Button from '../../../shared/components/ui/Button';
-import { KitchenIssue, KITCHEN_SECTIONS } from '../../../shared/mock/mockDb';
+import { KitchenIssue } from '../../../shared/mock/mockDb';
 import { formatDate } from '../../../shared/utils/formatters';
 import { ROUTES } from '../../../shared/constants/routes';
 import { KitchenIssueStackParamList } from '../../../app/navigation/types';
@@ -25,6 +25,7 @@ type NavigationProp = NativeStackNavigationProp<KitchenIssueStackParamList>;
 export const IssueHistoryScreen: React.FC = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const { data: kitchensData = [] } = useKitchens();
 
   // Filter states
   const [searchValue, setSearchValue] = useState('');
@@ -80,7 +81,7 @@ export const IssueHistoryScreen: React.FC = () => {
 
   const sectionOptions = [
     { label: 'All Sections', value: '' },
-    ...KITCHEN_SECTIONS.map((sec) => ({ label: sec, value: sec })),
+    ...kitchensData.map((k) => ({ label: k.name, value: k.name })),
   ];
 
   return (

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Text } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useInventoryList } from '../hooks/useInventory';
+import { useInventoryList, useCategories } from '../hooks/useInventory';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
@@ -15,7 +15,8 @@ import Badge from '../../../shared/components/ui/Badge';
 import Card from '../../../shared/components/ui/Card';
 import Select from '../../../shared/components/ui/Select';
 import Button from '../../../shared/components/ui/Button';
-import { Product, CATEGORIES } from '../../../shared/mock/mockDb';
+import { Product } from '../../../shared/mock/mockDb';
+import IngredientCreateModal from '../../../shared/components/modals/IngredientCreateModal';
 import { formatCurrency, formatNumber } from '../../../shared/utils/formatters';
 import { getStockStatus } from '../../../shared/utils/calculations';
 import { useDebounce } from '../../../shared/hooks/useDebounce';
@@ -27,6 +28,8 @@ type NavigationProp = NativeStackNavigationProp<InventoryStackParamList>;
 export const InventoryListScreen: React.FC = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
+  const [ingModalVisible, setIngModalVisible] = useState(false);
+  const { data: categoriesData = [] } = useCategories();
 
   // Filter states
   const [searchValue, setSearchValue] = useState('');
@@ -100,7 +103,7 @@ export const InventoryListScreen: React.FC = () => {
 
   const categoryOptions = [
     { label: 'All Categories', value: '' },
-    ...CATEGORIES.map((cat) => ({ label: cat, value: cat })),
+    ...categoriesData.map((cat) => ({ label: cat.name, value: cat.name })),
   ];
 
   const statusOptions = [
@@ -116,6 +119,10 @@ export const InventoryListScreen: React.FC = () => {
         <PageHeader
           title="Warehouse & Storage Stocks"
           subtitle="View ingredient quantites, average purchase rates, and min threshold warnings"
+          primaryAction={{
+            title: 'New Ingredient',
+            onPress: () => setIngModalVisible(true),
+          }}
         />
 
         <TableToolbar
@@ -248,6 +255,11 @@ export const InventoryListScreen: React.FC = () => {
           </View>
         )}
       </Drawer>
+
+      <IngredientCreateModal
+        visible={ingModalVisible}
+        onClose={() => setIngModalVisible(false)}
+      />
     </ScreenContainer>
   );
 };

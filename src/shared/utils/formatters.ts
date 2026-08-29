@@ -1,14 +1,14 @@
 import dayjs from 'dayjs';
 
 /**
- * Format number to currency ($ USD)
+ * Format number to currency (₹ INR)
  */
 export function formatCurrency(amount: number): string {
-  if (isNaN(amount) || amount === undefined || amount === null) return '$0.00';
-  return `$${amount.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  if (isNaN(amount) || amount === undefined || amount === null) return '₹0.00';
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+  }).format(amount);
 }
 
 /**

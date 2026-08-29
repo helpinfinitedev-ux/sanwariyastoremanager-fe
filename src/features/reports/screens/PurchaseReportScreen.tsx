@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { usePurchaseReport } from '../hooks/useReports';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -16,6 +17,7 @@ import { formatCurrency, formatDate } from '../../../shared/utils/formatters';
 
 export const PurchaseReportScreen: React.FC = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
 
   // Date range filters
   const [startDate, setStartDate] = useState(() => {
@@ -67,6 +69,10 @@ export const PurchaseReportScreen: React.FC = () => {
   if (isError || !data) {
     return (
       <ScreenContainer title="Purchase Report">
+        <PageHeader
+          title="Purchase Report"
+          onBack={() => navigation.goBack()}
+        />
         <ErrorState message="Could not compile purchases analytics." onRetry={refetch} />
       </ScreenContainer>
     );
@@ -75,7 +81,11 @@ export const PurchaseReportScreen: React.FC = () => {
   return (
     <ScreenContainer title="Purchases Report">
       <ScrollView contentContainerStyle={styles.scrollBody}>
-        <PageHeader title="Restock Purchase Analytics" subtitle="Report on material inflows and spends">
+        <PageHeader
+          title="Restock Purchase Analytics"
+          subtitle="Report on material inflows and spends"
+          onBack={() => navigation.goBack()}
+        >
           <ExportButton reportName="Restock Purchase Report" />
         </PageHeader>
 
@@ -148,11 +158,12 @@ const styles = StyleSheet.create({
   filterRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    marginHorizontal: -spacing.sm,
   },
   filterCol: {
     flex: 1,
     minWidth: 200,
+    paddingHorizontal: spacing.sm,
   },
   kpiRow: {
     flexDirection: 'row',

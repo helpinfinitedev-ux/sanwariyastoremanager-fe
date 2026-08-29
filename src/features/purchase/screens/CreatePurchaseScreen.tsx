@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { useCreatePurchase } from '../hooks/usePurchases';
+import { useCreatePurchase, useVendors } from '../hooks/usePurchases';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
@@ -16,16 +16,21 @@ export const CreatePurchaseScreen: React.FC = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
   const createMutation = useCreatePurchase();
+  const { data: vendors } = useVendors();
 
   const handleFormSubmit = (values: PurchaseFormValues) => {
+    const generatedInvoiceNo = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const assignedVendorId = vendors && vendors.length > 0 ? vendors[0].id : 'v1';
+
     // Reformat values for payload
     const payload = {
-      invoiceNo: values.invoiceNo,
-      vendorId: values.vendorId,
+      invoiceNo: values.invoiceNo || generatedInvoiceNo,
+      vendorId: values.vendorId || assignedVendorId,
       orderDate: values.orderDate,
       deliveryDate: values.deliveryDate || '',
       status: values.status,
       notes: values.notes || '',
+      photoUrl: values.photoUrl || '',
       items: values.items.map(item => ({
         productId: item.productId,
         quantity: Number(item.quantity),

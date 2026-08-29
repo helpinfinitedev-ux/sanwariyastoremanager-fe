@@ -5,16 +5,18 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useCreateIssue } from '../hooks/useKitchenIssues';
+import { useCreateIssue, useKitchens } from '../hooks/useKitchenIssues';
 import { useAllProductsRaw } from '../../inventory/hooks/useInventory';
 import { useTheme } from '../../../app/providers/ThemeProvider';
+import CreatableSelect from '../../../shared/components/ui/CreatableSelect';
+import KitchenCreateModal from '../../../shared/components/modals/KitchenCreateModal';
+import IngredientCreateModal from '../../../shared/components/modals/IngredientCreateModal';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
 import Input from '../../../shared/components/ui/Input';
 import Select from '../../../shared/components/ui/Select';
 import Button from '../../../shared/components/ui/Button';
 import Card from '../../../shared/components/ui/Card';
-import { KITCHEN_SECTIONS } from '../../../shared/mock/mockDb';
 import { Ionicons } from '@expo/vector-icons';
 import { ROUTES } from '../../../shared/constants/routes';
 import { KitchenIssueStackParamList } from '../../../app/navigation/types';
@@ -38,12 +40,21 @@ export const IssueStockScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const createMutation = useCreateIssue();
   const { data: products } = useAllProductsRaw();
+  const { data: kitchensData = [] } = useKitchens();
+
+  // Modals states
+  const [kitchenModalVisible, setKitchenModalVisible] = React.useState(false);
+  const [ingredientModalVisible, setIngredientModalVisible] = React.useState(false);
+  const [typedKitchenName, setTypedKitchenName] = React.useState('');
+  const [typedIngredientName, setTypedIngredientName] = React.useState('');
+  const [activeItemIndex, setActiveItemIndex] = React.useState<number | null>(null);
 
   const {
     control,
     handleSubmit,
     watch,
     setError,
+    setValue,
     formState: { errors },
   } = useForm<IssueFormValues>({
     resolver: zodResolver(issueSchema) as any,
@@ -97,9 +108,9 @@ export const IssueStockScreen: React.FC = () => {
     value: p.id,
   }));
 
-  const sectionOptions = KITCHEN_SECTIONS.map((sec: string) => ({
-    label: sec,
-    value: sec,
+  const sectionOptions = kitchensData.map((k) => ({
+    label: k.name,
+    value: k.name,
   }));
 
   return (
@@ -113,11 +124,17 @@ export const IssueStockScreen: React.FC = () => {
                 control={control}
                 name="issuedToSection"
                 render={({ field: { onChange, value } }) => (
-                  <Select
-                    label="Recipient Kitchen Section *"
+                  <CreatableSelect
+                    label="Recipient Kitchen Section"
+                    placeholder="Select Kitchen Section *"
                     options={sectionOptions}
                     selectedValue={value}
                     onValueChange={onChange}
+                    onCreate={(search) => {
+                      setTypedKitchenName(search);
+                      setKitchenModalVisible(true);
+                    }}
+                    createLabel="+ Add New Kitchen"
                     error={errors.issuedToSection?.message}
                   />
                 )}
@@ -157,11 +174,17 @@ export const IssueStockScreen: React.FC = () => {
                       control={control}
                       name={`items.${index}.productId`}
                       render={({ field: { onChange, value } }) => (
-                        <Select
+                        <CreatableSelect
                           label="Select Ingredient"
                           options={productOptions}
                           selectedValue={value}
                           onValueChange={onChange}
+                          onCreate={(search) => {
+                            setTypedIngredientName(search);
+                            setActiveItemIndex(index);
+                            setIngredientModalVisible(true);
+                          }}
+                          createLabel="+ Add New Ingredient"
                           error={errors.items?.[index]?.productId?.message}
                         />
                       )}
@@ -222,11 +245,29 @@ export const IssueStockScreen: React.FC = () => {
             loading={createMutation.isPending}
             style={styles.submitBtn}
           />
-        </Card>
-      </ScrollView>
-    </ScreenContainer>
-  );
-};
+          </Card>
+        </ScrollView>
+
+        <KitchenCreateModal
+          visible={kitchenModalVisible}
+          onClose={() => setKitchenModalVisible(false)}
+          initialName={typedKitchenName}
+          onSuccess={(kitchenName) => setValue('issuedToSection', kitchenName)}
+        />
+
+        <IngredientCreateModal
+          visible={ingredientModalVisible}
+          onClose={() => setIngredientModalVisible(false)}
+          initialName={typedIngredientName}
+          onSuccess={(productId) => {
+            if (activeItemIndex !== null) {
+              setValue(`items.${activeItemIndex}.productId` as any, productId);
+            }
+          }}
+        />
+      </ScreenContainer>
+    );
+  };
 
 const styles = StyleSheet.create({
   scrollBody: {

@@ -1,4 +1,4 @@
-import { db, simulateDelay, KitchenIssue } from '../../../shared/mock/mockDb';
+import { db, simulateDelay, KitchenIssue, Kitchen } from '../../../shared/mock/mockDb';
 import { KitchenIssueQueryParams, CreateKitchenIssueDto } from '../types';
 import { PaginatedResponse } from '../../../shared/types/common';
 import dayjs from 'dayjs';
@@ -72,4 +72,14 @@ export async function createKitchenIssue(dto: CreateKitchenIssueDto): Promise<Ki
   if (dto.items.length === 0) throw new Error('At least one ingredient must be issued');
 
   return db.createKitchenIssue(dto as any);
+}
+
+export async function getKitchens(): Promise<Kitchen[]> {
+  await simulateDelay(150);
+  return db.kitchens;
+}
+
+export async function createKitchen(kitchen: Kitchen): Promise<Kitchen> {
+  await simulateDelay(300);
+  return db.createKitchen(kitchen);
 }

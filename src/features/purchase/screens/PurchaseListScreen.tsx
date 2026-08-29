@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { View, StyleSheet, Text, ActivityIndicator, Image, Platform } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePurchases, useUpdatePurchase } from '../hooks/usePurchases';
 import { useTheme } from '../../../app/providers/ThemeProvider';
@@ -9,8 +9,7 @@ import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
 import PageHeader from '../../../shared/components/layout/PageHeader';
 import DataTable, { Column } from '../../../shared/components/table/DataTable';
 import TablePagination from '../../../shared/components/table/TablePagination';
-import TableToolbar from '../../../shared/components/table/TableToolbar';
-import PurchaseFilters from '../components/PurchaseFilters';
+import DatePicker from '../../../shared/components/ui/DatePicker';
 import Drawer from '../../../shared/components/ui/Drawer';
 import Badge from '../../../shared/components/ui/Badge';
 import Button from '../../../shared/components/ui/Button';
@@ -19,7 +18,7 @@ import { Purchase } from '../../../shared/mock/mockDb';
 import { formatCurrency, formatDate } from '../../../shared/utils/formatters';
 import { ROUTES } from '../../../shared/constants/routes';
 import { PurchaseStackParamList } from '../../../app/navigation/types';
-import { useDebounce } from '../../../shared/hooks/useDebounce';
+import { useAllProductsRaw } from '../../inventory/hooks/useInventory';
 
 type NavigationProp = NativeStackNavigationProp<PurchaseStackParamList>;
 
@@ -27,15 +26,11 @@ export const PurchaseListScreen: React.FC = () => {
   const { colors } = useTheme();
   const navigation = useNavigation<NavigationProp>();
 
-  // Filter & Search states
-  const [searchValue, setSearchValue] = useState('');
-  const debouncedSearch = useDebounce(searchValue, 400);
-
-  const [status, setStatus] = useState<'Draft' | 'Submitted' | ''>('');
-  const [vendorId, setVendorId] = useState('');
+  // Date range filters (applied on "Apply Filter" click)
+  const [localStartDate, setLocalStartDate] = useState('');
+  const [localEndDate, setLocalEndDate] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // Pagination states
   const [page, setPage] = useState(1);
@@ -48,29 +43,22 @@ export const PurchaseListScreen: React.FC = () => {
   // Selected row for Drawer view
   const [selectedPurchase, setSelectedPurchase] = useState<Purchase | null>(null);
 
-  // TanStack Query list fetch
-  const { data, isLoading, refetch } = usePurchases({
+  // Fetch data
+  const { data, isLoading } = usePurchases({
     page,
     pageSize,
-    search: debouncedSearch,
-    status,
-    vendorId,
     startDate,
     endDate,
     sortBy,
     sortOrder,
   });
 
+  const { data: products = [] } = useAllProductsRaw();
   const updateMutation = useUpdatePurchase(selectedPurchase?.id || '');
 
-  const hasActiveFilters = !!(status || vendorId || startDate || endDate);
-
-  const handleClearFilters = () => {
-    setStatus('');
-    setVendorId('');
-    setStartDate('');
-    setEndDate('');
-    setPage(1);
+  const getProductUnit = (productId: string) => {
+    const prod = products.find((p) => p.id === productId);
+    return prod?.unit || 'Kg';
   };
 
   const handleSort = (key: string) => {
@@ -92,21 +80,44 @@ export const PurchaseListScreen: React.FC = () => {
     });
   };
 
-  // Reusable columns definition
+  // Reusable columns definition (strictly removing vendor details)
   const columns: Column<Purchase>[] = [
-    { key: 'invoiceNo', title: 'Invoice No', flex: 1.2, sortable: true },
-    { key: 'vendorName', title: 'Vendor / Partner', flex: 1.8, sortable: true },
     {
       key: 'orderDate',
-      title: 'Order Date',
-      flex: 1.5,
+      title: 'Date',
+      flex: 1.3,
       sortable: true,
-      render: (item) => <Text style={{ color: colors.text }}>{formatDate(item.orderDate, 'MMM DD, YYYY')}</Text>,
+      render: (item) => <Text style={{ color: colors.text }}>{formatDate(item.orderDate, 'DD MMM YYYY')}</Text>,
+    },
+    { key: 'invoiceNo', title: 'Invoice No.', flex: 1.5, sortable: true },
+    {
+      key: 'itemsCount',
+      title: 'Items',
+      flex: 1,
+      render: (item) => (
+        <Text style={{ color: colors.text }}>
+          {item.items.length} {item.items.length === 1 ? 'Item' : 'Items'}
+        </Text>
+      ),
+    },
+    {
+      key: 'totalQty',
+      title: 'Total Qty',
+      flex: 1.2,
+      render: (item) => {
+        const totalQty = item.items.reduce((sum, i) => sum + i.quantity, 0);
+        const totalUnit = item.items.length > 0 ? getProductUnit(item.items[0].productId) : 'Kg';
+        return (
+          <Text style={{ color: colors.text }}>
+            {totalQty} {totalUnit}
+          </Text>
+        );
+      },
     },
     {
       key: 'totalAmount',
       title: 'Total Amount',
-      flex: 1.3,
+      flex: 1.4,
       align: 'right',
       sortable: true,
       render: (item) => (
@@ -118,7 +129,7 @@ export const PurchaseListScreen: React.FC = () => {
     {
       key: 'status',
       title: 'Status',
-      flex: 1,
+      flex: 1.2,
       align: 'center',
       render: (item) => (
         <Badge
@@ -129,8 +140,22 @@ export const PurchaseListScreen: React.FC = () => {
     },
   ];
 
+  // Custom empty states
+  const hasActiveFilters = !!(startDate || endDate);
+  const emptyText = hasActiveFilters
+    ? `No stock invoices found\n\nNo purchase records were found between\n${formatDate(startDate, 'DD MMM YYYY')} and ${formatDate(endDate, 'DD MMM YYYY')}.`
+    : 'No purchase invoices found in history.';
+
+  const handleClearFilters = () => {
+    setLocalStartDate('');
+    setLocalEndDate('');
+    setStartDate('');
+    setEndDate('');
+    setPage(1);
+  };
+
   return (
-    <ScreenContainer title="Purchase Orders">
+    <ScreenContainer title="Stock Purchase Invoices">
       <View style={styles.content}>
         <PageHeader
           title="Stock Invoices (Purchase)"
@@ -141,32 +166,55 @@ export const PurchaseListScreen: React.FC = () => {
           }}
         />
 
-        <TableToolbar
-          searchValue={searchValue}
-          onSearchChange={(val) => {
-            setSearchValue(val);
-            setPage(1);
-          }}
-          searchPlaceholder="Search invoice # or vendor..."
-          filterOpen={filtersOpen}
-          onToggleFilter={() => setFiltersOpen(!filtersOpen)}
-          hasActiveFilters={hasActiveFilters}
-          onClearFilters={handleClearFilters}
-        />
+        {/* Date Filter Card (Permanently visible) */}
+        <Card style={styles.filterCard}>
+          <View style={styles.filterInputsRow}>
+            <View style={styles.filterCol}>
+              <DatePicker
+                label="From Date"
+                value={localStartDate}
+                onChange={setLocalStartDate}
+              />
+            </View>
+            <View style={styles.filterCol}>
+              <DatePicker
+                label="To Date"
+                value={localEndDate}
+                onChange={setLocalEndDate}
+              />
+            </View>
+          </View>
+          <View style={styles.filterActions}>
+            <View style={styles.leftActions}>
+              <Button
+                title="Apply Filter"
+                onPress={() => {
+                  setStartDate(localStartDate);
+                  setEndDate(localEndDate);
+                  setPage(1);
+                }}
+                style={styles.actionBtn}
+              />
+              <Button
+                title="Clear"
+                variant="outline"
+                onPress={handleClearFilters}
+                style={styles.actionBtn}
+              />
+            </View>
+            {Platform.OS === 'web' && (
+              <Button
+                title="🖨 Print Report"
+                variant="outline"
+                onPress={() => window.print()}
+                style={styles.printBtn}
+                disabled={!data?.data || data.data.length === 0}
+              />
+            )}
+          </View>
+        </Card>
 
-        {filtersOpen && (
-          <PurchaseFilters
-            status={status}
-            setStatus={(s) => { setStatus(s); setPage(1); }}
-            vendorId={vendorId}
-            setVendorId={(id) => { setVendorId(id); setPage(1); }}
-            startDate={startDate}
-            setStartDate={(d) => { setStartDate(d); setPage(1); }}
-            endDate={endDate}
-            setEndDate={(d) => { setEndDate(d); setPage(1); }}
-          />
-        )}
-
+        {/* List of Invoices */}
         <View style={styles.tableWrapper}>
           <DataTable
             data={data?.data || []}
@@ -176,9 +224,15 @@ export const PurchaseListScreen: React.FC = () => {
             sortBy={sortBy}
             sortOrder={sortOrder}
             onSort={handleSort}
-            emptyText="No purchase invoices match your filter criteria."
-            emptyActionText="Create Invoice"
-            onEmptyAction={() => navigation.navigate(ROUTES.PURCHASE_SCREENS.CREATE as any)}
+            emptyText={emptyText}
+            emptyActionText={hasActiveFilters ? "Clear Filter" : "Create Invoice"}
+            onEmptyAction={() => {
+              if (hasActiveFilters) {
+                handleClearFilters();
+              } else {
+                navigation.navigate(ROUTES.PURCHASE_SCREENS.CREATE as any);
+              }
+            }}
           />
         </View>
 
@@ -203,10 +257,6 @@ export const PurchaseListScreen: React.FC = () => {
         {selectedPurchase && (
           <View style={styles.drawerDetails}>
             <View style={styles.drawerSummary}>
-              <View style={styles.drawerSummaryRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Vendor / Partner</Text>
-                <Text style={[styles.detailValue, { color: colors.text }]}>{selectedPurchase.vendorName}</Text>
-              </View>
               <View style={styles.drawerSummaryRow}>
                 <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Date Logged</Text>
                 <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(selectedPurchase.orderDate)}</Text>
@@ -243,7 +293,7 @@ export const PurchaseListScreen: React.FC = () => {
                   {item.productName}
                 </Text>
                 <Text style={[styles.itemCellQty, { color: colors.textSecondary }]}>
-                  {item.quantity}
+                  {item.quantity} {getProductUnit(item.productId)}
                 </Text>
                 <Text style={[styles.itemCellCost, { color: colors.textSecondary }]}>
                   {formatCurrency(item.unitCost)}
@@ -258,6 +308,13 @@ export const PurchaseListScreen: React.FC = () => {
               <View style={styles.notesBox}>
                 <Text style={[styles.detailLabel, { color: colors.textSecondary, marginBottom: 4 }]}>Notes</Text>
                 <Text style={[styles.notesText, { color: colors.text }]}>{selectedPurchase.notes}</Text>
+              </View>
+            ) : null}
+
+            {selectedPurchase.photoUrl ? (
+              <View style={styles.drawerPhotoSection}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary, marginBottom: 8 }]}>Invoice Photo</Text>
+                <Image source={{ uri: selectedPurchase.photoUrl }} style={styles.drawerInvoicePhoto} resizeMode="contain" />
               </View>
             ) : null}
 
@@ -284,17 +341,66 @@ export const PurchaseListScreen: React.FC = () => {
                   />
                 </>
               ) : (
-                <Button
-                  title="Close Panel"
-                  onPress={() => setSelectedPurchase(null)}
-                  variant="outline"
-                  style={{ flex: 1 }}
-                />
+                <View style={{ flex: 1, flexDirection: 'row', gap: 8 }}>
+                  <Button
+                    title="View Full Invoice"
+                    onPress={() => {
+                      setSelectedPurchase(null);
+                      navigation.navigate(ROUTES.PURCHASE_SCREENS.DETAILS, { id: selectedPurchase.id });
+                    }}
+                    style={{ flex: 1.2 }}
+                  />
+                  <Button
+                    title="Close"
+                    onPress={() => setSelectedPurchase(null)}
+                    variant="outline"
+                    style={{ flex: 0.8 }}
+                  />
+                </View>
               )}
             </View>
           </View>
         )}
       </Drawer>
+
+      {/* Hidden Print Area representing the Period Report */}
+      {Platform.OS === 'web' && (
+        <div id="print-area">
+          <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', color: '#000', backgroundColor: '#fff' }}>
+            <h1 style={{ textAlign: 'center', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>RESTAURANT STORE ERP</h1>
+            <h2 style={{ textAlign: 'center', margin: '5px 0 15px 0', fontSize: '16px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Stock Purchase Report</h2>
+            <div style={{ textAlign: 'center', marginBottom: '20px', fontSize: '13px', borderBottom: '1px solid #000', paddingBottom: '10px' }}>
+              <strong>Period:</strong> {startDate ? formatDate(startDate, 'DD MMM YYYY') : 'All Time'} — {endDate ? formatDate(endDate, 'DD MMM YYYY') : 'All Time'}
+            </div>
+
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #000', borderTop: '2px solid #000' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 4px', fontWeight: 'bold' }}>Date</th>
+                  <th style={{ textAlign: 'left', padding: '8px 4px', fontWeight: 'bold' }}>Invoice No.</th>
+                  <th style={{ textAlign: 'center', padding: '8px 4px', fontWeight: 'bold' }}>Items</th>
+                  <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: 'bold' }}>Total Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(data?.data || []).map((item, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #ddd' }}>
+                    <td style={{ padding: '8px 4px' }}>{formatDate(item.orderDate, 'DD MMM YYYY')}</td>
+                    <td style={{ padding: '8px 4px' }}>{item.invoiceNo}</td>
+                    <td style={{ textAlign: 'center', padding: '8px 4px' }}>{item.items.length}</td>
+                    <td style={{ textAlign: 'right', padding: '8px 4px' }}>{formatCurrency(item.totalAmount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <div style={{ borderTop: '2px solid #000', paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '13px' }}>
+              <div style={{ marginBottom: '5px' }}><strong>Total Invoices:</strong> {data?.totalCount || 0}</div>
+              <div><strong style={{ fontSize: '14px' }}>Total Purchase Value:</strong> {formatCurrency((data?.data || []).reduce((sum, item) => sum + item.totalAmount, 0))}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </ScreenContainer>
   );
 };
@@ -304,9 +410,49 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     flex: 1,
   },
+  filterCard: {
+    padding: spacing.md,
+    marginBottom: spacing.md,
+  },
+  filterTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: spacing.sm,
+  },
+  filterInputsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginHorizontal: -spacing.sm,
+    marginBottom: spacing.sm,
+  },
+  filterCol: {
+    flex: 1,
+    minWidth: 150,
+    paddingHorizontal: spacing.sm,
+  },
+  filterActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  leftActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  actionBtn: {
+    minWidth: 100,
+    height: 36,
+  },
+  printBtn: {
+    minWidth: 120,
+    height: 36,
+  },
   tableWrapper: {
     flex: 1,
-    marginTop: spacing.sm,
+    marginTop: spacing.xs,
   },
   drawerDetails: {
     gap: spacing.md,
@@ -342,10 +488,10 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   itemHeaderName: { flex: 2, fontSize: 11, fontWeight: '600' },
-  itemHeaderQty: { flex: 0.6, fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  itemHeaderQty: { flex: 0.8, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   itemHeaderCost: { flex: 1, fontSize: 11, fontWeight: '600', textAlign: 'right' },
   itemHeaderSub: { flex: 1, fontSize: 11, fontWeight: '600', textAlign: 'right' },
-  
+
   lineItemRow: {
     flexDirection: 'row',
     paddingVertical: spacing.sm,
@@ -354,7 +500,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   itemCellName: { flex: 2, fontSize: 12 },
-  itemCellQty: { flex: 0.6, fontSize: 12, textAlign: 'center' },
+  itemCellQty: { flex: 0.8, fontSize: 12, textAlign: 'center' },
   itemCellCost: { flex: 1, fontSize: 12, textAlign: 'right' },
   itemCellSub: { flex: 1, fontSize: 12, textAlign: 'right' },
 
@@ -369,6 +515,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.sm,
     marginTop: spacing.md,
+  },
+  drawerPhotoSection: {
+    marginTop: spacing.sm,
+    gap: 4,
+  },
+  drawerInvoicePhoto: {
+    width: '100%',
+    height: 180,
+    borderRadius: 6,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
   },
 });
 

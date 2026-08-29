@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPurchases, getPurchaseById, createPurchase, updatePurchase, getVendorsList } from '../services/purchaseService.mock';
+import { getPurchases, getPurchaseById, createPurchase, updatePurchase, getVendorsList, createSupplier } from '../services/purchaseService.mock';
 import { PurchaseQueryParams, CreatePurchaseDto, UpdatePurchaseDto } from '../types';
 import Toast from 'react-native-toast-message';
+import { Vendor } from '../../../shared/mock/mockDb';
 
 export function usePurchases(params: PurchaseQueryParams) {
   return useQuery({
@@ -79,5 +80,27 @@ export function useUpdatePurchase(id: string) {
         text2: error.message || 'Please check input data.',
       });
     },
+  });
+}
+
+export function useCreateSupplier() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (vendorData: Omit<Vendor, 'id' | 'code'>) => createSupplier(vendorData),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['vendors'] });
+      Toast.show({
+        type: 'success',
+        text1: 'Supplier Created',
+        text2: `✓ Supplier "${data.name}" added successfully`,
+      });
+    },
+    onError: (err: any) => {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to create supplier',
+        text2: err.message || 'Please check input data.',
+      });
+    }
   });
 }

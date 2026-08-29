@@ -5,7 +5,10 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useCreateWaste } from '../hooks/useWaste';
+import { useCreateWaste, useWasteReasons } from '../hooks/useWaste';
+import CreatableSelect from '../../../shared/components/ui/CreatableSelect';
+import IngredientCreateModal from '../../../shared/components/modals/IngredientCreateModal';
+import WasteReasonCreateModal from '../../../shared/components/modals/WasteReasonCreateModal';
 import { useAllProductsRaw } from '../../inventory/hooks/useInventory';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -20,7 +23,7 @@ import { WasteStackParamList } from '../../../app/navigation/types';
 const wasteSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
   quantity: z.coerce.number().positive('Quantity must be positive'),
-  reason: z.enum(['Expired', 'Spoiled', 'Damaged', 'Overproduction', 'Other']),
+  reason: z.string().min(1, 'Reason is required'),
   notes: z.string().optional(),
 });
 
@@ -32,12 +35,20 @@ export const WasteEntryScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const createMutation = useCreateWaste();
   const { data: products } = useAllProductsRaw();
+  const { data: reasonsData = [] } = useWasteReasons();
+
+  // Modals visibility states
+  const [ingModalVisible, setIngModalVisible] = React.useState(false);
+  const [reasonModalVisible, setReasonModalVisible] = React.useState(false);
+  const [typedIngredientName, setTypedIngredientName] = React.useState('');
+  const [typedReasonName, setTypedReasonName] = React.useState('');
 
   const {
     control,
     handleSubmit,
     watch,
     setError,
+    setValue,
     formState: { errors },
   } = useForm<WasteFormValues>({
     resolver: zodResolver(wasteSchema) as any,
@@ -80,13 +91,10 @@ export const WasteEntryScreen: React.FC = () => {
     value: p.id,
   }));
 
-  const reasonOptions = [
-    { label: 'Expired', value: 'Expired' },
-    { label: 'Spoiled', value: 'Spoiled' },
-    { label: 'Damaged', value: 'Damaged' },
-    { label: 'Overproduction', value: 'Overproduction' },
-    { label: 'Other', value: 'Other' },
-  ];
+  const reasonOptions = reasonsData.map((r) => ({
+    label: r.name,
+    value: r.name,
+  }));
 
   return (
     <ScreenContainer title="Log Spoilage / Waste">
@@ -98,11 +106,17 @@ export const WasteEntryScreen: React.FC = () => {
             control={control}
             name="productId"
             render={({ field: { onChange, value } }) => (
-              <Select
-                label="Ingredient Product *"
+              <CreatableSelect
+                label="Ingredient Product"
+                placeholder="Select Ingredient Product *"
                 options={productOptions}
                 selectedValue={value}
                 onValueChange={onChange}
+                onCreate={(search) => {
+                  setTypedIngredientName(search);
+                  setIngModalVisible(true);
+                }}
+                createLabel="+ Add New Ingredient"
                 error={errors.productId?.message}
               />
             )}
@@ -129,11 +143,17 @@ export const WasteEntryScreen: React.FC = () => {
                 control={control}
                 name="reason"
                 render={({ field: { onChange, value } }) => (
-                  <Select
-                    label="Waste Reason Category *"
+                  <CreatableSelect
+                    label="Waste Reason Category"
+                    placeholder="Select Waste Reason *"
                     options={reasonOptions}
                     selectedValue={value}
                     onValueChange={onChange}
+                    onCreate={(search) => {
+                      setTypedReasonName(search);
+                      setReasonModalVisible(true);
+                    }}
+                    createLabel="+ Add New Reason"
                     error={errors.reason?.message}
                   />
                 )}
@@ -167,6 +187,20 @@ export const WasteEntryScreen: React.FC = () => {
           />
         </Card>
       </ScrollView>
+
+      <IngredientCreateModal
+        visible={ingModalVisible}
+        onClose={() => setIngModalVisible(false)}
+        initialName={typedIngredientName}
+        onSuccess={(productId) => setValue('productId', productId)}
+      />
+
+      <WasteReasonCreateModal
+        visible={reasonModalVisible}
+        onClose={() => setReasonModalVisible(false)}
+        initialName={typedReasonName}
+        onSuccess={(reasonName) => setValue('reason', reasonName)}
+      />
     </ScreenContainer>
   );
 };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Platform } from 'react-native';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePurchaseById, useUpdatePurchase } from '../hooks/usePurchases';
@@ -14,6 +14,7 @@ import ErrorState from '../../../shared/components/feedback/ErrorState';
 import { formatCurrency, formatDate } from '../../../shared/utils/formatters';
 import { PurchaseStackParamList } from '../../../app/navigation/types';
 import { ROUTES } from '../../../shared/constants/routes';
+import { useAllProductsRaw } from '../../inventory/hooks/useInventory';
 
 type RoutePropType = RouteProp<PurchaseStackParamList, 'PurchaseDetails'>;
 type NavigationProp = NativeStackNavigationProp<PurchaseStackParamList>;
@@ -25,7 +26,13 @@ export const PurchaseDetailsScreen: React.FC = () => {
   const { id } = route.params;
 
   const { data: purchase, isLoading, isError, refetch } = usePurchaseById(id);
+  const { data: products = [] } = useAllProductsRaw();
   const updateMutation = useUpdatePurchase(id);
+
+  const getProductUnit = (productId: string) => {
+    const prod = products.find((p) => p.id === productId);
+    return prod?.unit || 'Kg';
+  };
 
   const handleSubmitDraft = () => {
     updateMutation.mutate({ status: 'Submitted' });
@@ -61,6 +68,10 @@ export const PurchaseDetailsScreen: React.FC = () => {
         <PageHeader
           title={`Purchase Invoice: ${purchase.invoiceNo}`}
           subtitle={`Managed and stored in branch directory`}
+          primaryAction={Platform.OS === 'web' ? {
+            title: '🖨 Print',
+            onPress: () => window.print(),
+          } : undefined}
         />
 
         <View style={styles.contentGrid}>
@@ -69,10 +80,6 @@ export const PurchaseDetailsScreen: React.FC = () => {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Summary Header</Text>
             
             <View style={styles.detailsList}>
-              <View style={styles.detailRow}>
-                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Vendor Partner</Text>
-                <Text style={[styles.detailVal, { color: colors.text }]}>{purchase.vendorName}</Text>
-              </View>
               <View style={styles.detailRow}>
                 <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Order Date</Text>
                 <Text style={[styles.detailVal, { color: colors.text }]}>{formatDate(purchase.orderDate)}</Text>
@@ -96,6 +103,13 @@ export const PurchaseDetailsScreen: React.FC = () => {
               <View style={styles.notesSection}>
                 <Text style={[styles.detailLabel, { color: colors.textSecondary, marginBottom: 4 }]}>Notes</Text>
                 <Text style={[styles.notesText, { color: colors.text }]}>{purchase.notes}</Text>
+              </View>
+            ) : null}
+
+            {purchase.photoUrl ? (
+              <View style={styles.photoSection}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary, marginBottom: 8 }]}>Invoice Photo</Text>
+                <Image source={{ uri: purchase.photoUrl }} style={styles.invoicePhoto} resizeMode="contain" />
               </View>
             ) : null}
 
@@ -134,7 +148,7 @@ export const PurchaseDetailsScreen: React.FC = () => {
                   {item.productName}
                 </Text>
                 <Text style={[styles.cellQty, { color: colors.textSecondary }]}>
-                  {item.quantity}
+                  {item.quantity} {getProductUnit(item.productId)}
                 </Text>
                 <Text style={[styles.cellCost, { color: colors.textSecondary }]}>
                   {formatCurrency(item.unitCost)}
@@ -147,6 +161,50 @@ export const PurchaseDetailsScreen: React.FC = () => {
           </Card>
         </View>
       </ScrollView>
+
+      {/* Hidden Print Container for Individual Invoice */}
+      {Platform.OS === 'web' && (
+        <div id="print-area">
+          <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', color: '#000', backgroundColor: '#fff' }}>
+            <h1 style={{ textAlign: 'center', margin: 0, fontSize: '20px', fontWeight: 'bold' }}>RESTAURANT STORE ERP</h1>
+            <h2 style={{ textAlign: 'center', margin: '5px 0 15px 0', fontSize: '15px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Stock Purchase Invoice</h2>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '13px', borderBottom: '1px solid #000', paddingBottom: '10px' }}>
+              <div><strong>Invoice No:</strong> {purchase.invoiceNo}</div>
+              <div><strong>Purchase Date:</strong> {formatDate(purchase.orderDate, 'DD MMM YYYY')}</div>
+            </div>
+            
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px', fontSize: '12px' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #000', borderTop: '2px solid #000' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 4px', fontWeight: 'bold' }}>Item</th>
+                  <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: 'bold' }}>Quantity</th>
+                  <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: 'bold' }}>Unit</th>
+                  <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: 'bold' }}>Unit Cost</th>
+                  <th style={{ textAlign: 'right', padding: '8px 4px', fontWeight: 'bold' }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {purchase.items.map((item, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #ddd' }}>
+                    <td style={{ padding: '8px 4px' }}>{item.productName}</td>
+                    <td style={{ textAlign: 'right', padding: '8px 4px' }}>{item.quantity}</td>
+                    <td style={{ textAlign: 'right', padding: '8px 4px' }}>{getProductUnit(item.productId)}</td>
+                    <td style={{ textAlign: 'right', padding: '8px 4px' }}>{formatCurrency(item.unitCost)}</td>
+                    <td style={{ textAlign: 'right', padding: '8px 4px' }}>{formatCurrency(item.subtotal)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            
+            <div style={{ borderTop: '2px solid #000', paddingTop: '10px', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', fontSize: '13px' }}>
+              <div style={{ marginBottom: '5px' }}><strong>Total Quantity:</strong> {purchase.items.reduce((sum, i) => sum + i.quantity, 0)}</div>
+              <div style={{ marginBottom: '5px' }}><strong>Subtotal:</strong> {formatCurrency(purchase.totalAmount)}</div>
+              <div><strong style={{ fontSize: '14px', fontWeight: 'bold' }}>Total Amount:</strong> {formatCurrency(purchase.totalAmount)}</div>
+            </div>
+          </div>
+        </div>
+      )}
     </ScreenContainer>
   );
 };
@@ -226,6 +284,18 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
     marginTop: spacing.sm,
   },
+  photoSection: {
+    marginTop: spacing.sm,
+    gap: 4,
+  },
+  invoicePhoto: {
+    width: '100%',
+    height: 220,
+    borderRadius: 8,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
   tableHeader: {
     flexDirection: 'row',
     paddingVertical: spacing.xs,
@@ -233,7 +303,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   colName: { flex: 2, fontSize: 11, fontWeight: '600' },
-  colQty: { flex: 0.6, fontSize: 11, fontWeight: '600', textAlign: 'center' },
+  colQty: { flex: 0.8, fontSize: 11, fontWeight: '600', textAlign: 'center' },
   colCost: { flex: 1, fontSize: 11, fontWeight: '600', textAlign: 'right' },
   colSub: { flex: 1, fontSize: 11, fontWeight: '600', textAlign: 'right' },
 
@@ -245,7 +315,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cellName: { flex: 2, fontSize: 12 },
-  cellQty: { flex: 0.6, fontSize: 12, textAlign: 'center' },
+  cellQty: { flex: 0.8, fontSize: 12, textAlign: 'center' },
   cellCost: { flex: 1, fontSize: 12, textAlign: 'right' },
   cellSub: { flex: 1, fontSize: 12, textAlign: 'right' },
 });

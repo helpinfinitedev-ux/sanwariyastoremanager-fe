@@ -1,5 +1,40 @@
 // Central in-memory database for Restaurant Store ERP
 
+export interface Category {
+  name: string;
+  description?: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface Unit {
+  name: string;
+  shortCode: string;
+  type?: string;
+}
+
+export interface StorageLocation {
+  name: string;
+  description?: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface Kitchen {
+  name: string;
+  kitchenType?: string;
+  description?: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface WasteReason {
+  name: string;
+  description?: string;
+  status: 'Active' | 'Inactive';
+}
+
+export interface Brand {
+  name: string;
+}
+
 export interface Product {
   id: string;
   sku: string;
@@ -11,6 +46,8 @@ export interface Product {
   purchaseCost: number; // Last purchased cost
   avgCost: number;      // Average cost
   unit: string;
+  brand?: string;
+  storageLocation?: string;
 }
 
 export interface Vendor {
@@ -21,6 +58,8 @@ export interface Vendor {
   phone: string;
   email: string;
   address: string;
+  gstin?: string;
+  paymentTerms?: string;
 }
 
 export interface PurchaseItem {
@@ -42,6 +81,7 @@ export interface Purchase {
   totalAmount: number;
   status: 'Draft' | 'Submitted';
   notes?: string;
+  photoUrl?: string;
 }
 
 export interface KitchenIssueItem {
@@ -66,7 +106,7 @@ export interface WasteEntry {
   productName: string;
   quantity: number;
   unit: string;
-  reason: 'Expired' | 'Spoiled' | 'Damaged' | 'Overproduction' | 'Other';
+  reason: string;
   valueLost: number;
   notes?: string;
   photoUrl?: string;
@@ -175,6 +215,52 @@ class InMemoryDb {
   movements: StockMovement[] = [];
   activities: Activity[] = [];
 
+  categories: Category[] = CATEGORIES.map(name => ({
+    name,
+    description: `${name} ingredients and raw materials`,
+    status: 'Active',
+  }));
+
+  units: Unit[] = [
+    { name: 'Kilogram', shortCode: 'Kg', type: 'Weight' },
+    { name: 'Gram', shortCode: 'g', type: 'Weight' },
+    { name: 'Liter', shortCode: 'L', type: 'Volume' },
+    { name: 'Milliliter', shortCode: 'ml', type: 'Volume' },
+    { name: 'Piece', shortCode: 'pcs', type: 'Count' },
+    { name: 'Tray', shortCode: 'tray', type: 'Count' },
+    { name: 'Bag', shortCode: 'bag', type: 'Count' },
+  ];
+
+  storageLocations: StorageLocation[] = [
+    { name: 'Dry Store', description: 'Dry goods storage', status: 'Active' },
+    { name: 'Cold Storage', description: 'Refrigerated walk-in', status: 'Active' },
+    { name: 'Freezer', description: 'Frozen walk-in', status: 'Active' },
+    { name: 'Vegetable Store', description: 'Fresh vegetables and fruits store', status: 'Active' },
+    { name: 'Beverage Store', description: 'Beverages storage', status: 'Active' },
+  ];
+
+  kitchens: Kitchen[] = KITCHEN_SECTIONS.map(name => ({
+    name,
+    kitchenType: name.includes('Bar') ? 'Beverage' : name.includes('Bakery') ? 'Baking' : 'Preparation',
+    description: `${name} department`,
+    status: 'Active',
+  }));
+
+  wasteReasons: WasteReason[] = [
+    { name: 'Expired', description: 'Passed product expiry date', status: 'Active' },
+    { name: 'Spoiled', description: 'Soured, spoiled, or rotten food', status: 'Active' },
+    { name: 'Damaged', description: 'Container damaged or items dropped', status: 'Active' },
+    { name: 'Overproduction', description: 'Prepared in excess of daily demand', status: 'Active' },
+    { name: 'Other', description: 'Miscellaneous loss categories', status: 'Active' },
+  ];
+
+  brands: Brand[] = [
+    { name: 'Nestle' },
+    { name: 'Amul' },
+    { name: 'Generic' },
+    { name: 'Metro Quality' },
+  ];
+
   constructor() {
     this.seedOperations();
   }
@@ -257,7 +343,7 @@ class InMemoryDb {
           timestamp: p.orderDate,
           type: 'purchase',
           actor: 'Store Manager',
-          description: `Received purchase delivery from ${p.vendorName}. Invoice: ${p.invoiceNo}. Total: $${p.totalAmount.toFixed(2)}`,
+          description: `Received purchase delivery from ${p.vendorName}. Invoice: ${p.invoiceNo}. Total: ₹${p.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
           referenceId: p.id,
         });
       }
@@ -583,6 +669,129 @@ class InMemoryDb {
     this.logActivity('waste', `Logged waste: ${wasteData.quantity} ${prod.unit} of ${prod.name} (${wasteData.reason})`, id);
 
     return newWaste;
+  }
+
+  createProduct(productData: {
+    name: string;
+    category: string;
+    unit: string;
+    minStock?: number;
+    purchaseCost?: number;
+    brand?: string;
+    storageLocation?: string;
+  }) {
+    const exists = this.products.some(p => p.name.trim().toLowerCase() === productData.name.trim().toLowerCase());
+    if (exists) throw new Error('Product already exists.');
+
+    const id = `p${this.products.length + 1}`;
+    const namePart = productData.name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 4);
+    const sku = `PRD-${namePart || 'ITEM'}-${Math.floor(100 + Math.random() * 900)}`;
+
+    const newProd: Product = {
+      id,
+      sku,
+      name: productData.name.trim(),
+      category: productData.category,
+      unit: productData.unit,
+      currentStock: 0,
+      minStock: Number(productData.minStock) || 0,
+      maxStock: 100,
+      purchaseCost: Number(productData.purchaseCost) || 0,
+      avgCost: Number(productData.purchaseCost) || 0,
+      brand: productData.brand || 'Generic',
+      storageLocation: productData.storageLocation || 'Dry Store',
+    };
+
+    this.products.push(newProd);
+    this.logActivity('system', `Added new product ingredient: ${newProd.name} (${newProd.sku})`);
+    return newProd;
+  }
+
+  createCategory(category: Category) {
+    const exists = this.categories.some(c => c.name.trim().toLowerCase() === category.name.trim().toLowerCase());
+    if (exists) throw new Error('Category already exists.');
+    
+    const newCategory = {
+      ...category,
+      name: category.name.trim(),
+    };
+    this.categories.push(newCategory);
+    this.logActivity('system', `Created new product category: ${newCategory.name}`);
+    return newCategory;
+  }
+
+  createUnit(unit: Unit) {
+    const exists = this.units.some(u => 
+      u.name.trim().toLowerCase() === unit.name.trim().toLowerCase() ||
+      u.shortCode.trim().toLowerCase() === unit.shortCode.trim().toLowerCase()
+    );
+    if (exists) throw new Error('Unit already exists.');
+
+    const newUnit = {
+      ...unit,
+      name: unit.name.trim(),
+      shortCode: unit.shortCode.trim(),
+    };
+    this.units.push(newUnit);
+    this.logActivity('system', `Created new unit: ${newUnit.name} (${newUnit.shortCode})`);
+    return newUnit;
+  }
+
+  createStorageLocation(location: StorageLocation) {
+    const exists = this.storageLocations.some(l => l.name.trim().toLowerCase() === location.name.trim().toLowerCase());
+    if (exists) throw new Error('Location already exists.');
+
+    const newLocation = {
+      ...location,
+      name: location.name.trim(),
+    };
+    this.storageLocations.push(newLocation);
+    this.logActivity('system', `Created new storage location: ${newLocation.name}`);
+    return newLocation;
+  }
+
+  createKitchen(kitchen: Kitchen) {
+    const exists = this.kitchens.some(k => k.name.trim().toLowerCase() === kitchen.name.trim().toLowerCase());
+    if (exists) throw new Error('Kitchen already exists.');
+
+    const newKitchen = {
+      ...kitchen,
+      name: kitchen.name.trim(),
+    };
+    this.kitchens.push(newKitchen);
+    this.logActivity('system', `Created new kitchen department: ${newKitchen.name}`);
+    return newKitchen;
+  }
+
+  createWasteReason(reason: WasteReason) {
+    const exists = this.wasteReasons.some(r => r.name.trim().toLowerCase() === reason.name.trim().toLowerCase());
+    if (exists) throw new Error('Waste Reason already exists.');
+
+    const newReason = {
+      ...reason,
+      name: reason.name.trim(),
+    };
+    this.wasteReasons.push(newReason);
+    this.logActivity('system', `Created new waste reason: ${newReason.name}`);
+    return newReason;
+  }
+
+  createSupplier(vendorData: Omit<Vendor, 'id' | 'code'>) {
+    const exists = this.vendors.some(v => v.name.trim().toLowerCase() === vendorData.name.trim().toLowerCase());
+    if (exists) throw new Error('Supplier already exists.');
+
+    const id = `v${this.vendors.length + 1}`;
+    const code = `VND-${vendorData.name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5)}`;
+    
+    const newVendor: Vendor = {
+      ...vendorData,
+      id,
+      code,
+      name: vendorData.name.trim(),
+    };
+    this.vendors.push(newVendor);
+    this.logActivity('system', `Added new supplier vendor: ${newVendor.name}`);
+    return newVendor;
   }
 
   // Helper activity log

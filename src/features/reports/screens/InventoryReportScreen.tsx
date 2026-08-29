@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useInventoryReport } from '../hooks/useReports';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -11,10 +12,11 @@ import ReportChart from '../components/ReportChart';
 import ExportButton from '../components/ExportButton';
 import DataTable, { Column } from '../../../shared/components/table/DataTable';
 import ErrorState from '../../../shared/components/feedback/ErrorState';
-import { formatCurrency, formatNumber } from '../../../shared/utils/formatters';
+import { formatCurrency } from '../../../shared/utils/formatters';
 
 export const InventoryReportScreen: React.FC = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
   const { data, isLoading, isError, refetch } = useInventoryReport();
 
   const columns: Column<any>[] = [
@@ -64,6 +66,10 @@ export const InventoryReportScreen: React.FC = () => {
   if (isError || !data) {
     return (
       <ScreenContainer title="Inventory Report">
+        <PageHeader
+          title="Inventory Report"
+          onBack={() => navigation.goBack()}
+        />
         <ErrorState message="Could not compile inventory analytics report." onRetry={refetch} />
       </ScreenContainer>
     );
@@ -72,7 +78,11 @@ export const InventoryReportScreen: React.FC = () => {
   return (
     <ScreenContainer title="Inventory Asset Report">
       <ScrollView contentContainerStyle={styles.scrollBody}>
-        <PageHeader title="Inventory Asset Valuation Audit" subtitle="Audit asset holdings, safety limits, and categories allocations">
+        <PageHeader
+          title="Inventory Asset Valuation Audit"
+          subtitle="Audit asset holdings, safety limits, and categories allocations"
+          onBack={() => navigation.goBack()}
+        >
           <ExportButton reportName="Inventory Valuation Report" />
         </PageHeader>
 

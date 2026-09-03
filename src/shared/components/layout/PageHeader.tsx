@@ -14,6 +14,7 @@ interface PageHeaderProps {
     onPress: () => void;
     icon?: string;
   };
+  action?: React.ReactNode;
   style?: ViewStyle;
   children?: React.ReactNode;
 }
@@ -23,6 +24,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   subtitle,
   onBack,
   primaryAction,
+  action,
   style,
   children,
 }) => {
@@ -60,6 +62,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
       </View>
 
       <View style={styles.rightSection}>
+        {action}
         {children}
         {primaryAction && (
           <Button

@@ -1,17 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { getStockMovements } from '../services/stockMovementService.mock';
+import stockMovementService, { StockMovementQueryParams } from '../services/stockMovementService';
 
-export function useStockMovements(params: {
-  page: number;
-  pageSize: number;
-  search: string;
-  type: 'Purchase' | 'Kitchen Issue' | 'Waste' | 'Adjustment' | '';
-  productId?: string;
-  startDate?: string;
-  endDate?: string;
-}) {
+export function useStockMovements(params: StockMovementQueryParams) {
   return useQuery({
     queryKey: ['stockMovements', params],
-    queryFn: () => getStockMovements(params),
+    queryFn: () => stockMovementService.getStockMovements(params),
   });
 }

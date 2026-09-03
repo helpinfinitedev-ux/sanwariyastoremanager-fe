@@ -6,6 +6,7 @@ import { useCreatePurchase, useVendors } from '../hooks/usePurchases';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
+import PageHeader from '../../../shared/components/layout/PageHeader';
 import PurchaseForm, { PurchaseFormValues } from '../components/PurchaseForm';
 import { PurchaseStackParamList } from '../../../app/navigation/types';
 import { ROUTES } from '../../../shared/constants/routes';
@@ -18,18 +19,28 @@ export const CreatePurchaseScreen: React.FC = () => {
   const createMutation = useCreatePurchase();
   const { data: vendors } = useVendors();
 
+  const handleBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate(ROUTES.PURCHASE_SCREENS.LIST as any);
+    }
+  };
+
   const handleFormSubmit = (values: PurchaseFormValues) => {
     const generatedInvoiceNo = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const assignedVendorId = vendors && vendors.length > 0 ? vendors[0].id : 'v1';
 
     // Reformat values for payload
     const payload = {
-      invoiceNo: values.invoiceNo || generatedInvoiceNo,
+      invoiceNo: generatedInvoiceNo,
       vendorId: values.vendorId || assignedVendorId,
       orderDate: values.orderDate,
-      deliveryDate: values.deliveryDate || '',
+      deliveryDate: '',
       status: values.status,
-      notes: values.notes || '',
+      paidAmount: Number(values.paidAmount) || 0,
+      paymentMethod: values.paymentMethod || 'Cash',
+      notes: '',
       photoUrl: values.photoUrl || '',
       items: values.items.map(item => ({
         productId: item.productId,
@@ -49,6 +60,10 @@ export const CreatePurchaseScreen: React.FC = () => {
   return (
     <ScreenContainer title="Create Restock Invoice">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <PageHeader
+          title="Create Restock Invoice"
+          onBack={handleBack}
+        />
         <PurchaseForm
           onSubmit={handleFormSubmit}
           loading={createMutation.isPending}

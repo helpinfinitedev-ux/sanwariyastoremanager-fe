@@ -3,7 +3,7 @@ import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useWindowDimensions } from 'react-native';
 import Sidebar from '../../shared/components/layout/Sidebar';
-import { MainDrawerParamList, PurchaseStackParamList, InventoryStackParamList, KitchenIssueStackParamList, WasteStackParamList, StockMovementStackParamList, ReportsStackParamList, ProfileStackParamList } from './types';
+import { MainDrawerParamList, PurchaseStackParamList, VendorsStackParamList, ExpensesStackParamList, InventoryStackParamList, KitchenIssueStackParamList, WasteStackParamList, StockMovementStackParamList, ReportsStackParamList, ProfileStackParamList } from './types';
 import { ROUTES } from '../../shared/constants/routes';
 
 // Screens imports
@@ -12,6 +12,11 @@ import PurchaseListScreen from '../../features/purchase/screens/PurchaseListScre
 import PurchaseDetailsScreen from '../../features/purchase/screens/PurchaseDetailsScreen';
 import CreatePurchaseScreen from '../../features/purchase/screens/CreatePurchaseScreen';
 import EditPurchaseScreen from '../../features/purchase/screens/EditPurchaseScreen';
+
+import VendorListScreen from '../../features/vendor/screens/VendorListScreen';
+import VendorDetailsScreen from '../../features/vendor/screens/VendorDetailsScreen';
+
+import ExpensesScreen from '../../features/expenses/screens/ExpensesScreen';
 
 import InventoryListScreen from '../../features/inventory/screens/InventoryListScreen';
 import ProductDetailsScreen from '../../features/inventory/screens/ProductDetailsScreen';
@@ -31,6 +36,9 @@ import PurchaseReportScreen from '../../features/reports/screens/PurchaseReportS
 import InventoryReportScreen from '../../features/reports/screens/InventoryReportScreen';
 import KitchenIssueReportScreen from '../../features/reports/screens/KitchenIssueReportScreen';
 import WasteReportScreen from '../../features/reports/screens/WasteReportScreen';
+import ExpenseReportScreen from '../../features/reports/screens/ExpenseReportScreen';
+import StockMovementReportScreen from '../../features/reports/screens/StockMovementReportScreen';
+import VendorPayablesReportScreen from '../../features/reports/screens/VendorPayablesReportScreen';
 
 import ProfileScreen from '../../features/auth/screens/ProfileScreen';
 
@@ -45,6 +53,21 @@ const PurchaseStackNavigator = () => (
     <PurchaseStack.Screen name={ROUTES.PURCHASE_SCREENS.CREATE} component={CreatePurchaseScreen} />
     <PurchaseStack.Screen name={ROUTES.PURCHASE_SCREENS.EDIT} component={EditPurchaseScreen} />
   </PurchaseStack.Navigator>
+);
+
+const VendorsStack = createNativeStackNavigator<VendorsStackParamList>();
+const VendorsStackNavigator = () => (
+  <VendorsStack.Navigator screenOptions={{ headerShown: false }}>
+    <VendorsStack.Screen name={ROUTES.VENDORS_SCREENS.LIST} component={VendorListScreen} />
+    <VendorsStack.Screen name={ROUTES.VENDORS_SCREENS.DETAILS} component={VendorDetailsScreen} />
+  </VendorsStack.Navigator>
+);
+
+const ExpensesStack = createNativeStackNavigator<ExpensesStackParamList>();
+const ExpensesStackNavigator = () => (
+  <ExpensesStack.Navigator screenOptions={{ headerShown: false }}>
+    <ExpensesStack.Screen name={ROUTES.EXPENSES_SCREENS.MAIN} component={ExpensesScreen} />
+  </ExpensesStack.Navigator>
 );
 
 const InventoryStack = createNativeStackNavigator<InventoryStackParamList>();
@@ -88,6 +111,9 @@ const ReportsStackNavigator = () => (
     <ReportsStack.Screen name={ROUTES.REPORTS_SCREENS.INVENTORY} component={InventoryReportScreen} />
     <ReportsStack.Screen name={ROUTES.REPORTS_SCREENS.KITCHEN_ISSUE} component={KitchenIssueReportScreen} />
     <ReportsStack.Screen name={ROUTES.REPORTS_SCREENS.WASTE} component={WasteReportScreen} />
+    <ReportsStack.Screen name={ROUTES.REPORTS_SCREENS.EXPENSE} component={ExpenseReportScreen} />
+    <ReportsStack.Screen name={ROUTES.REPORTS_SCREENS.STOCK_MOVEMENT} component={StockMovementReportScreen} />
+    <ReportsStack.Screen name={ROUTES.REPORTS_SCREENS.VENDORS} component={VendorPayablesReportScreen} />
   </ReportsStack.Navigator>
 );
 
@@ -116,6 +142,8 @@ export const MainDrawerNavigator: React.FC = () => {
     >
       <Drawer.Screen name={ROUTES.MAIN.DASHBOARD as any} component={DashboardScreen} />
       <Drawer.Screen name={ROUTES.MAIN.PURCHASE as any} component={PurchaseStackNavigator} />
+      <Drawer.Screen name={ROUTES.MAIN.VENDORS as any} component={VendorsStackNavigator} />
+      <Drawer.Screen name={ROUTES.MAIN.EXPENSES as any} component={ExpensesStackNavigator} />
       <Drawer.Screen name={ROUTES.MAIN.INVENTORY as any} component={InventoryStackNavigator} />
       <Drawer.Screen name={ROUTES.MAIN.KITCHEN_ISSUE as any} component={KitchenIssueStackNavigator} />
       <Drawer.Screen name={ROUTES.MAIN.WASTE as any} component={WasteStackNavigator} />

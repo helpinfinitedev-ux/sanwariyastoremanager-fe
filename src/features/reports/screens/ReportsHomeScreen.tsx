@@ -37,11 +37,25 @@ export const ReportsHomeScreen: React.FC = () => {
       iconColor: colors.success,
     },
     {
+      title: 'Operating Expenses Report',
+      desc: 'Audit operational overheads, store utilities, maintenance, and category spends.',
+      route: ROUTES.REPORTS_SCREENS.EXPENSE as keyof ReportsStackParamList,
+      icon: 'wallet',
+      iconColor: colors.warning,
+    },
+    {
       title: 'Inventory Valuation Report',
       desc: 'Audit real-time asset value distributions across products and storage categories.',
       route: ROUTES.REPORTS_SCREENS.INVENTORY as keyof ReportsStackParamList,
       icon: 'cube',
       iconColor: colors.primary,
+    },
+    {
+      title: 'Stock Movement Audit Report',
+      desc: 'Audit material flux across purchases, kitchen dispatches, waste, and adjustments.',
+      route: ROUTES.REPORTS_SCREENS.STOCK_MOVEMENT as keyof ReportsStackParamList,
+      icon: 'swap-horizontal',
+      iconColor: colors.info,
     },
     {
       title: 'Kitchen Dispatch Report',
@@ -56,6 +70,13 @@ export const ReportsHomeScreen: React.FC = () => {
       route: ROUTES.REPORTS_SCREENS.WASTE as keyof ReportsStackParamList,
       icon: 'trash',
       iconColor: colors.danger,
+    },
+    {
+      title: 'Vendor Payables & Liabilities',
+      desc: 'Audit supplier procurement invoices, settled disbursements, and balance due.',
+      route: ROUTES.REPORTS_SCREENS.VENDORS as keyof ReportsStackParamList,
+      icon: 'people',
+      iconColor: colors.primary,
     },
   ];
 

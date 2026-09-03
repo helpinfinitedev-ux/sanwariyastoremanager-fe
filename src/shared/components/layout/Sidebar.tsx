@@ -20,6 +20,8 @@ export const Sidebar: React.FC<DrawerContentComponentProps> = ({ navigation, sta
   const menuItems: SidebarItem[] = [
     { name: 'Dashboard', route: ROUTES.MAIN.DASHBOARD, icon: 'grid-outline' },
     { name: 'Purchase Management', route: ROUTES.MAIN.PURCHASE, icon: 'receipt-outline' },
+    { name: 'Vendors & Suppliers', route: ROUTES.MAIN.VENDORS, icon: 'business-outline' },
+    { name: 'Expenses & Outlays', route: ROUTES.MAIN.EXPENSES, icon: 'wallet-outline' },
     { name: 'Inventory Management', route: ROUTES.MAIN.INVENTORY, icon: 'cube-outline' },
     { name: 'Kitchen Issue', route: ROUTES.MAIN.KITCHEN_ISSUE, icon: 'restaurant-outline' },
     { name: 'Waste Management', route: ROUTES.MAIN.WASTE, icon: 'trash-outline' },

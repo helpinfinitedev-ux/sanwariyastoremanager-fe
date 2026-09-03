@@ -8,6 +8,7 @@ interface DatePickerProps {
   label?: string;
   value: string; // ISO date string or YYYY-MM-DD
   onChange: (value: string) => void;
+  placeholder?: string;
   error?: string;
   containerStyle?: ViewStyle;
 }
@@ -16,6 +17,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   label,
   value,
   onChange,
+  placeholder,
   error,
   containerStyle,
 }) => {

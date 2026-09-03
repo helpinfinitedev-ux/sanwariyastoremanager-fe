@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getIssueHistory, getIssueById, createKitchenIssue, getKitchens, createKitchen } from '../services/kitchenIssueService.mock';
+import kitchenIssueService from '../services/kitchenIssueService';
 import { KitchenIssueQueryParams, CreateKitchenIssueDto } from '../types';
 import Toast from 'react-native-toast-message';
 import { Kitchen } from '../../../shared/mock/mockDb';
@@ -7,14 +7,14 @@ import { Kitchen } from '../../../shared/mock/mockDb';
 export function useIssueHistory(params: KitchenIssueQueryParams) {
   return useQuery({
     queryKey: ['kitchenIssues', params],
-    queryFn: () => getIssueHistory(params),
+    queryFn: () => kitchenIssueService.getIssueHistory(params),
   });
 }
 
 export function useIssueDetails(id: string) {
   return useQuery({
     queryKey: ['kitchenIssue', id],
-    queryFn: () => getIssueById(id),
+    queryFn: () => kitchenIssueService.getIssueById(id),
     enabled: !!id,
   });
 }
@@ -23,13 +23,16 @@ export function useCreateIssue() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (dto: CreateKitchenIssueDto) => createKitchenIssue(dto),
+    mutationFn: (dto: CreateKitchenIssueDto) => kitchenIssueService.createKitchenIssue(dto),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['kitchenIssues'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardKpis'] });
-      queryClient.invalidateQueries({ queryKey: ['recentActivities'] });
+      queryClient.invalidateQueries({ queryKey: ['storeDashboard'] });
       queryClient.invalidateQueries({ queryKey: ['inventoryList'] });
+      queryClient.invalidateQueries({ queryKey: ['allProductsRaw'] });
       queryClient.invalidateQueries({ queryKey: ['stockMovements'] });
+      queryClient.invalidateQueries({ queryKey: ['kitchenIssueReport'] });
+      queryClient.invalidateQueries({ queryKey: ['kitchenConsumptionAnalytics'] });
 
       Toast.show({
         type: 'success',
@@ -50,14 +53,14 @@ export function useCreateIssue() {
 export function useKitchens() {
   return useQuery({
     queryKey: ['kitchens'],
-    queryFn: getKitchens,
+    queryFn: () => kitchenIssueService.getKitchens(),
   });
 }
 
 export function useCreateKitchen() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (kitchen: Kitchen) => createKitchen(kitchen),
+    mutationFn: (kitchen: Kitchen) => kitchenIssueService.createKitchen(kitchen),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['kitchens'] });
       Toast.show({
@@ -72,6 +75,6 @@ export function useCreateKitchen() {
         text1: 'Failed to create kitchen',
         text2: err.message || 'Please check input data.',
       });
-    }
+    },
   });
 }

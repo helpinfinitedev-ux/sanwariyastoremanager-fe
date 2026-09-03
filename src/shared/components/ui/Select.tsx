@@ -12,8 +12,10 @@ export interface SelectOption {
 interface SelectProps {
   label?: string;
   options: SelectOption[];
-  selectedValue: string;
-  onValueChange: (value: string) => void;
+  selectedValue?: string;
+  value?: string;
+  onValueChange?: (value: string) => void;
+  onSelect?: (value: string) => void;
   error?: string;
   placeholder?: string;
   containerStyle?: ViewStyle;
@@ -23,7 +25,9 @@ export const Select: React.FC<SelectProps> = ({
   label,
   options,
   selectedValue,
+  value,
   onValueChange,
+  onSelect,
   error,
   placeholder = 'Select an option',
   containerStyle,
@@ -31,10 +35,12 @@ export const Select: React.FC<SelectProps> = ({
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const selectedOption = options.find((o) => o.value === selectedValue);
+  const activeValue = selectedValue !== undefined ? selectedValue : (value || '');
+  const selectedOption = options.find((o) => o.value === activeValue);
 
-  const handleSelect = (value: string) => {
-    onValueChange(value);
+  const handleSelect = (val: string) => {
+    if (onValueChange) onValueChange(val);
+    if (onSelect) onSelect(val);
     setModalVisible(false);
   };
 

@@ -6,6 +6,7 @@ import { usePurchaseById, useUpdatePurchase } from '../hooks/usePurchases';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
+import PageHeader from '../../../shared/components/layout/PageHeader';
 import PurchaseForm, { PurchaseFormValues } from '../components/PurchaseForm';
 import ErrorState from '../../../shared/components/feedback/ErrorState';
 import { PurchaseStackParamList } from '../../../app/navigation/types';
@@ -25,12 +26,14 @@ export const EditPurchaseScreen: React.FC = () => {
 
   const handleFormSubmit = (values: PurchaseFormValues) => {
     const payload = {
-      invoiceNo: values.invoiceNo,
+      invoiceNo: purchase?.invoiceNo || '',
       vendorId: values.vendorId,
       orderDate: values.orderDate,
-      deliveryDate: values.deliveryDate || '',
+      deliveryDate: purchase?.deliveryDate || '',
       status: values.status,
-      notes: values.notes || '',
+      paidAmount: Number(values.paidAmount) || 0,
+      paymentMethod: values.paymentMethod || 'Cash',
+      notes: purchase?.notes || '',
       photoUrl: values.photoUrl || '',
       items: values.items.map(item => ({
         productId: item.productId,
@@ -72,12 +75,11 @@ export const EditPurchaseScreen: React.FC = () => {
 
   // Preformat items list for form
   const initialFormValues: Partial<PurchaseFormValues> = {
-    invoiceNo: purchase.invoiceNo,
     vendorId: purchase.vendorId,
     orderDate: purchase.orderDate ? purchase.orderDate.split('T')[0] : '',
-    deliveryDate: purchase.deliveryDate ? purchase.deliveryDate.split('T')[0] : '',
     status: purchase.status,
-    notes: purchase.notes,
+    paidAmount: purchase.paidAmount || 0,
+    paymentMethod: (purchase.paymentMethod as any) || 'Cash',
     photoUrl: purchase.photoUrl || '',
     items: purchase.items.map(item => ({
       productId: item.productId,
@@ -89,11 +91,16 @@ export const EditPurchaseScreen: React.FC = () => {
   return (
     <ScreenContainer title="Edit Restock Invoice">
       <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <PageHeader
+          title="Edit Restock Invoice"
+          onBack={() => navigation.goBack()}
+        />
         <PurchaseForm
           initialValues={initialFormValues}
           onSubmit={handleFormSubmit}
           loading={updateMutation.isPending}
           isEdit={true}
+          purchaseId={id}
         />
       </View>
     </ScreenContainer>

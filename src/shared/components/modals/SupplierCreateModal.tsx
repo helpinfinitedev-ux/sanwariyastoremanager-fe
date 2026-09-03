@@ -74,13 +74,16 @@ export const SupplierCreateModal: React.FC<SupplierCreateModalProps> = ({
     createMutation.mutate(
       {
         name: values.name.trim(),
+        firmName: values.name.trim(),
         contactPerson: values.contactPerson || '',
         phone: values.phone || '',
         email: values.email || '',
         address: values.address || '',
         gstin: values.gstin || '',
-        paymentTerms: values.paymentTerms || '',
-      },
+        paymentTerms: (values.paymentTerms as any) || '15 Days',
+        openingBalance: 0,
+        status: 'Active',
+      } as any,
       {
         onSuccess: (data) => {
           if (onSuccess) onSuccess(data.id, data.name);

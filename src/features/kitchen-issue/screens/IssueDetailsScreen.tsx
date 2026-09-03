@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useIssueDetails } from '../hooks/useKitchenIssues';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -16,6 +16,7 @@ type RoutePropType = RouteProp<KitchenIssueStackParamList, 'KitchenIssueDetails'
 export const IssueDetailsScreen: React.FC = () => {
   const { colors } = useTheme();
   const route = useRoute<RoutePropType>();
+  const navigation = useNavigation();
   const { id } = route.params;
 
   const { data: issue, isLoading, isError, refetch } = useIssueDetails(id);
@@ -50,6 +51,7 @@ export const IssueDetailsScreen: React.FC = () => {
         <PageHeader
           title={`Kitchen Dispatch: ${issue.id}`}
           subtitle={`Dispatched materials records for auditing`}
+          onBack={() => navigation.goBack()}
         />
 
         <View style={styles.contentGrid}>

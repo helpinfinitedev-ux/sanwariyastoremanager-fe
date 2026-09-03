@@ -13,6 +13,7 @@ import { useAllProductsRaw } from '../../inventory/hooks/useInventory';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
+import PageHeader from '../../../shared/components/layout/PageHeader';
 import Input from '../../../shared/components/ui/Input';
 import Select from '../../../shared/components/ui/Select';
 import Button from '../../../shared/components/ui/Button';
@@ -98,6 +99,11 @@ export const WasteEntryScreen: React.FC = () => {
 
   return (
     <ScreenContainer title="Log Spoilage / Waste">
+      <PageHeader
+        title="Log Spoilage / Waste"
+        subtitle="Record inventory shrinkage, expired stock, or kitchen loss"
+        onBack={() => navigation.goBack()}
+      />
       <ScrollView contentContainerStyle={styles.scrollBody}>
         <Card style={styles.formCard}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Waste Details</Text>

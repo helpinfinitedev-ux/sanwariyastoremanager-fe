@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, ActivityIndicator, Image, Platform } from 'react-native';
+import { View, StyleSheet, Text, ActivityIndicator, Image, Platform, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { usePurchases, useUpdatePurchase } from '../hooks/usePurchases';
@@ -80,44 +80,63 @@ export const PurchaseListScreen: React.FC = () => {
     });
   };
 
-  // Reusable columns definition (strictly removing vendor details)
+  const getPaymentBadgeType = (status?: string): 'success' | 'warning' | 'danger' => {
+    switch (status) {
+      case 'PAID':
+        return 'success';
+      case 'PARTIAL':
+        return 'warning';
+      case 'CREDIT':
+      default:
+        return 'danger';
+    }
+  };
+
+  // Columns definition
   const columns: Column<Purchase>[] = [
     {
       key: 'orderDate',
       title: 'Date',
-      flex: 1.3,
+      flex: 1.2,
       sortable: true,
       render: (item) => <Text style={{ color: colors.text }}>{formatDate(item.orderDate, 'DD MMM YYYY')}</Text>,
     },
-    { key: 'invoiceNo', title: 'Invoice No.', flex: 1.5, sortable: true },
+    { key: 'invoiceNo', title: 'Invoice No.', flex: 1.3, sortable: true },
+    {
+      key: 'vendorName',
+      title: 'Vendor / Supplier',
+      flex: 1.6,
+      render: (item) => (
+        <TouchableOpacity
+          onPress={() => {
+            if (item.vendorId) {
+              (navigation as any).navigate(ROUTES.MAIN.VENDORS, {
+                screen: ROUTES.VENDORS_SCREENS.DETAILS,
+                params: { id: item.vendorId },
+              });
+            }
+          }}
+        >
+          <Text style={{ color: colors.primary, fontWeight: '500', textDecorationLine: 'underline' }} numberOfLines={1}>
+            {item.vendorName || '—'}
+          </Text>
+        </TouchableOpacity>
+      ),
+    },
     {
       key: 'itemsCount',
       title: 'Items',
-      flex: 1,
+      flex: 0.8,
       render: (item) => (
-        <Text style={{ color: colors.text }}>
+        <Text style={{ color: colors.textSecondary }}>
           {item.items.length} {item.items.length === 1 ? 'Item' : 'Items'}
         </Text>
       ),
     },
     {
-      key: 'totalQty',
-      title: 'Total Qty',
-      flex: 1.2,
-      render: (item) => {
-        const totalQty = item.items.reduce((sum, i) => sum + i.quantity, 0);
-        const totalUnit = item.items.length > 0 ? getProductUnit(item.items[0].productId) : 'Kg';
-        return (
-          <Text style={{ color: colors.text }}>
-            {totalQty} {totalUnit}
-          </Text>
-        );
-      },
-    },
-    {
       key: 'totalAmount',
       title: 'Total Amount',
-      flex: 1.4,
+      flex: 1.2,
       align: 'right',
       sortable: true,
       render: (item) => (
@@ -127,9 +146,21 @@ export const PurchaseListScreen: React.FC = () => {
       ),
     },
     {
+      key: 'paymentStatus',
+      title: 'Payment',
+      flex: 1.1,
+      align: 'center',
+      render: (item) => (
+        <Badge
+          label={item.paymentStatus || 'CREDIT'}
+          type={getPaymentBadgeType(item.paymentStatus)}
+        />
+      ),
+    },
+    {
       key: 'status',
       title: 'Status',
-      flex: 1.2,
+      flex: 1,
       align: 'center',
       render: (item) => (
         <Badge
@@ -258,6 +289,10 @@ export const PurchaseListScreen: React.FC = () => {
           <View style={styles.drawerDetails}>
             <View style={styles.drawerSummary}>
               <View style={styles.drawerSummaryRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Vendor / Supplier</Text>
+                <Text style={[styles.detailValue, { color: colors.text, fontWeight: '600' }]}>{selectedPurchase.vendorName || '—'}</Text>
+              </View>
+              <View style={styles.drawerSummaryRow}>
                 <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Date Logged</Text>
                 <Text style={[styles.detailValue, { color: colors.text }]}>{formatDate(selectedPurchase.orderDate)}</Text>
               </View>
@@ -266,6 +301,19 @@ export const PurchaseListScreen: React.FC = () => {
                 <Text style={[styles.detailValue, { color: colors.text, fontWeight: '700' }]}>
                   {formatCurrency(selectedPurchase.totalAmount)}
                 </Text>
+              </View>
+              <View style={styles.drawerSummaryRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Paid / Due</Text>
+                <Text style={[styles.detailValue, { color: colors.text }]}>
+                  <Text style={{ color: colors.success }}>{formatCurrency(selectedPurchase.paidAmount || 0)}</Text> / <Text style={{ color: (selectedPurchase.dueAmount || 0) > 0 ? colors.danger : colors.textSecondary }}>{formatCurrency(selectedPurchase.dueAmount || 0)}</Text>
+                </Text>
+              </View>
+              <View style={styles.drawerSummaryRow}>
+                <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Payment Status</Text>
+                <Badge
+                  label={selectedPurchase.paymentStatus || 'CREDIT'}
+                  type={getPaymentBadgeType(selectedPurchase.paymentStatus)}
+                />
               </View>
               <View style={styles.drawerSummaryRow}>
                 <Text style={[styles.detailLabel, { color: colors.textSecondary }]}>Invoice Status</Text>

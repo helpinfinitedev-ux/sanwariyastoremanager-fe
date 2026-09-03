@@ -214,11 +214,21 @@ export const IssueHistoryScreen: React.FC = () => {
 
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-            <Button
-              title="Close Details"
-              onPress={() => setSelectedIssue(null)}
-              variant="outline"
-            />
+            <View style={{ gap: spacing.sm }}>
+              <Button
+                title="View Full Dispatch Record"
+                onPress={() => {
+                  const issueId = selectedIssue.id;
+                  setSelectedIssue(null);
+                  navigation.navigate(ROUTES.KITCHEN_ISSUE_SCREENS.DETAILS as any, { id: issueId });
+                }}
+              />
+              <Button
+                title="Close Details"
+                onPress={() => setSelectedIssue(null)}
+                variant="outline"
+              />
+            </View>
           </View>
         )}
       </Drawer>

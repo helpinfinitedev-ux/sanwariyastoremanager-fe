@@ -12,12 +12,23 @@ export type AuthStackParamList = {
 export type MainDrawerParamList = {
   Dashboard: undefined;
   PurchaseStack: NavigatorScreenParams<PurchaseStackParamList>;
+  VendorsStack: NavigatorScreenParams<VendorsStackParamList>;
+  ExpensesStack: NavigatorScreenParams<ExpensesStackParamList>;
   InventoryStack: NavigatorScreenParams<InventoryStackParamList>;
   KitchenIssueStack: NavigatorScreenParams<KitchenIssueStackParamList>;
   WasteStack: NavigatorScreenParams<WasteStackParamList>;
   StockMovementStack: NavigatorScreenParams<StockMovementStackParamList>;
   ReportsStack: NavigatorScreenParams<ReportsStackParamList>;
   ProfileStack: NavigatorScreenParams<ProfileStackParamList>;
+};
+
+export type VendorsStackParamList = {
+  VendorList: undefined;
+  VendorDetails: { id: string };
+};
+
+export type ExpensesStackParamList = {
+  ExpensesMain: undefined;
 };
 
 export type PurchaseStackParamList = {
@@ -55,6 +66,8 @@ export type ReportsStackParamList = {
   KitchenIssueReport: undefined;
   WasteReport: undefined;
   StockMovementReport: undefined;
+  ExpenseReport: undefined;
+  VendorPayablesReport: undefined;
 };
 
 export type ProfileStackParamList = {

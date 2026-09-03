@@ -254,11 +254,21 @@ export const WasteHistoryScreen: React.FC = () => {
 
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-            <Button
-              title="Close Panel"
-              onPress={() => setSelectedWaste(null)}
-              variant="outline"
-            />
+            <View style={{ gap: spacing.sm }}>
+              <Button
+                title="View Full Waste Record"
+                onPress={() => {
+                  const wasteId = selectedWaste.id;
+                  setSelectedWaste(null);
+                  navigation.navigate(ROUTES.WASTE_SCREENS.DETAILS as any, { id: wasteId });
+                }}
+              />
+              <Button
+                title="Close Panel"
+                onPress={() => setSelectedWaste(null)}
+                variant="outline"
+              />
+            </View>
           </View>
         )}
       </Drawer>

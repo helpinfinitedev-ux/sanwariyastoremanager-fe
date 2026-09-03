@@ -4,7 +4,7 @@ import { useTheme } from '../../../app/providers/ThemeProvider';
 import TopBar from './TopBar';
 
 interface ScreenContainerProps {
-  title: string;
+  title?: string;
   children: React.ReactNode;
   scrollable?: boolean;
   style?: ViewStyle;
@@ -12,7 +12,7 @@ interface ScreenContainerProps {
 }
 
 export const ScreenContainer: React.FC<ScreenContainerProps> = ({
-  title,
+  title = 'Sanwariya Store ERP',
   children,
   scrollable = false,
   style,

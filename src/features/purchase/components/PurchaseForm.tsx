@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
-import { useVendors } from '../hooks/usePurchases';
+import { useVendors, useVendorOutstanding } from '../hooks/usePurchases';
 import { useAllProductsRaw } from '../../inventory/hooks/useInventory';
 import Input from '../../../shared/components/ui/Input';
 import Select from '../../../shared/components/ui/Select';
@@ -16,6 +16,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { formatCurrency } from '../../../shared/utils/formatters';
 import CreatableSelect from '../../../shared/components/ui/CreatableSelect';
 import IngredientCreateModal from '../../../shared/components/modals/IngredientCreateModal';
+import SupplierCreateModal from '../../../shared/components/modals/SupplierCreateModal';
+import Badge from '../../../shared/components/ui/Badge';
 
 const purchaseItemSchema = z.object({
   productId: z.string().min(1, 'Product is required'),
@@ -24,12 +26,11 @@ const purchaseItemSchema = z.object({
 });
 
 const purchaseSchema = z.object({
-  invoiceNo: z.string().optional(),
-  vendorId: z.string().optional(),
-  orderDate: z.string().min(1, 'Order Date is required'),
-  deliveryDate: z.string().optional(),
+  vendorId: z.string().min(1, 'Vendor / Supplier is required'),
+  orderDate: z.string().min(1, 'Purchase Date is required'),
   status: z.enum(['Draft', 'Submitted']),
-  notes: z.string().optional(),
+  paidAmount: z.coerce.number().min(0, 'Paid amount cannot be negative').optional(),
+  paymentMethod: z.enum(['Cash', 'UPI', 'Bank Transfer', 'Card', 'Cheque', 'Other']).optional(),
   photoUrl: z.string().optional(),
   items: z.array(purchaseItemSchema).min(1, 'At least one line item is required'),
 });
@@ -41,6 +42,7 @@ interface PurchaseFormProps {
   onSubmit: (values: PurchaseFormValues) => void;
   loading?: boolean;
   isEdit?: boolean;
+  purchaseId?: string;
 }
 
 export const PurchaseForm: React.FC<PurchaseFormProps> = ({
@@ -48,6 +50,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
   onSubmit,
   loading = false,
   isEdit = false,
+  purchaseId,
 }) => {
   const { colors } = useTheme();
   const { data: vendors } = useVendors();
@@ -57,6 +60,9 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
   const [ingModalVisible, setIngModalVisible] = useState(false);
   const [typedProductName, setTypedProductName] = useState('');
   const [activeItemIndex, setActiveItemIndex] = useState<number | null>(null);
+
+  const [supplierModalVisible, setSupplierModalVisible] = useState(false);
+  const [typedSupplierName, setTypedSupplierName] = useState('');
 
   const handleFileChange = (e: any, onChange: (val: string) => void) => {
     const file = e.target.files?.[0];
@@ -78,12 +84,11 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
   } = useForm<PurchaseFormValues>({
     resolver: zodResolver(purchaseSchema) as any,
     defaultValues: {
-      invoiceNo: '',
       vendorId: '',
       orderDate: new Date().toISOString().split('T')[0],
-      deliveryDate: '',
       status: 'Draft',
-      notes: '',
+      paidAmount: 0,
+      paymentMethod: 'Cash',
       photoUrl: '',
       items: [{ productId: '', quantity: 1, unitCost: 1.0 }],
       ...initialValues,
@@ -97,6 +102,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
 
   const watchedItems = watch('items');
   const watchedVendorId = watch('vendorId');
+  const watchedPaidAmount = Number(watch('paidAmount')) || 0;
 
   // Compute overall total invoice amount
   const calculateTotalAmount = () => {
@@ -107,13 +113,35 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
     }, 0);
   };
 
+  const totalAmount = calculateTotalAmount();
+  const isPaidAmountInvalid = watchedPaidAmount > totalAmount;
+  const remainingDue = Math.max(0, totalAmount - watchedPaidAmount);
+
+  // Previous & total vendor outstanding balance calculation
+  const previousVendorOutstanding = useVendorOutstanding(watchedVendorId, purchaseId);
+  const totalVendorOutstanding = previousVendorOutstanding + remainingDue;
+
+  let paymentStatusLabel = 'UNPAID / CREDIT';
+  let paymentStatusBadgeType: 'danger' | 'warning' | 'success' = 'danger';
+
+  if (watchedPaidAmount === 0 || totalAmount === 0) {
+    paymentStatusLabel = 'UNPAID / CREDIT';
+    paymentStatusBadgeType = 'danger';
+  } else if (watchedPaidAmount < totalAmount) {
+    paymentStatusLabel = 'PARTIAL PAYMENT';
+    paymentStatusBadgeType = 'warning';
+  } else {
+    paymentStatusLabel = 'PAID';
+    paymentStatusBadgeType = 'success';
+  }
+
   const productOptions = (products || []).map((p) => ({
     label: `${p.name} (${p.sku})`,
     value: p.id,
   }));
 
   const vendorOptions = (vendors || []).map((v) => ({
-    label: v.name,
+    label: v.firmName ? `${v.firmName} (${v.name})` : v.name,
     value: v.id,
   }));
 
@@ -124,6 +152,13 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
     if (selectedProd) {
       setValue(`items.${index}.unitCost` as any, selectedProd.purchaseCost);
     }
+  };
+
+  const handleFormSubmit = (values: PurchaseFormValues) => {
+    if (watchedPaidAmount > totalAmount) {
+      return;
+    }
+    onSubmit(values);
   };
 
   return (
@@ -148,13 +183,20 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
           <View style={styles.formCol}>
             <Controller
               control={control}
-              name="deliveryDate"
+              name="vendorId"
               render={({ field: { onChange, value } }) => (
-                <DatePicker
-                  label="Expected Delivery Date"
-                  value={value || ''}
-                  onChange={onChange}
-                  error={errors.deliveryDate?.message}
+                <CreatableSelect
+                  label="Vendor / Supplier *"
+                  placeholder="Select Vendor / Supplier"
+                  options={vendorOptions}
+                  selectedValue={value || ''}
+                  onValueChange={onChange}
+                  onCreate={(txt) => {
+                    setTypedSupplierName(txt);
+                    setSupplierModalVisible(true);
+                  }}
+                  createLabel="+ Add New Supplier"
+                  error={errors.vendorId?.message}
                 />
               )}
             />
@@ -322,39 +364,126 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
           })}
         </View>
 
+        {/* Payment Details Section */}
         <View style={[styles.divider, { backgroundColor: colors.divider }]} />
-
-        {/* Bottom controls */}
+        <View style={styles.paymentSectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>Payment Details</Text>
+          <Badge
+            label={paymentStatusLabel}
+            type={paymentStatusBadgeType}
+          />
+        </View>
+        
         <View style={styles.formRow}>
           <View style={styles.formCol}>
             <Controller
               control={control}
-              name="notes"
+              name="paidAmount"
               render={({ field: { onChange, value } }) => (
                 <Input
-                  label="Internal Store Notes"
-                  placeholder="Describe order exceptions or shipment logs"
-                  multiline
-                  numberOfLines={3}
-                  value={value || ''}
-                  onChangeText={onChange}
-                  style={styles.notesInput}
+                  label="Amount Paid (₹)"
+                  placeholder="0"
+                  value={value !== undefined ? String(value) : ''}
+                  onChangeText={(val) => onChange(Number(val) || 0)}
+                  keyboardType="numeric"
+                  error={isPaidAmountInvalid ? `Amount paid cannot exceed purchase total (${formatCurrency(totalAmount)})` : undefined}
                 />
               )}
             />
           </View>
-
+          <View style={styles.formCol}>
+            <Controller
+              control={control}
+              name="paymentMethod"
+              render={({ field: { onChange, value } }) => (
+                <Select
+                  label="Payment Method"
+                  options={[
+                    { label: 'Cash', value: 'Cash' },
+                    { label: 'UPI', value: 'UPI' },
+                    { label: 'Bank Transfer', value: 'Bank Transfer' },
+                    { label: 'Card', value: 'Card' },
+                    { label: 'Cheque', value: 'Cheque' },
+                    { label: 'Other', value: 'Other' },
+                  ]}
+                  value={value || 'Cash'}
+                  onSelect={onChange}
+                />
+              )}
+            />
+          </View>
           <View style={styles.summaryCol}>
-            <View style={[styles.summaryBox, { borderColor: colors.border, backgroundColor: colors.background }]}>
-              <Text style={[styles.summaryTitle, { color: colors.textSecondary }]}>Invoice Summary</Text>
+            <View style={[styles.paymentCalcBox, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}>
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Total Items:</Text>
-                <Text style={[styles.summaryValue, { color: colors.text }]}>{watchedItems.length}</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Purchase Total:</Text>
+                <Text style={[styles.summaryValue, { color: colors.text, fontWeight: '700' }]}>
+                  {formatCurrency(totalAmount)}
+                </Text>
               </View>
               <View style={styles.summaryRow}>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Grand Total:</Text>
-                <Text style={[styles.summaryValue, { color: colors.text, fontSize: 16, fontWeight: '700' }]}>
-                  {formatCurrency(calculateTotalAmount())}
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Amount Paid:</Text>
+                <Text style={[styles.summaryValue, { color: colors.success, fontWeight: '700' }]}>
+                  {formatCurrency(watchedPaidAmount)}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Current Invoice Remaining Due:</Text>
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: remainingDue > 0 ? colors.danger : colors.success,
+                      fontWeight: '700',
+                    },
+                  ]}
+                >
+                  {formatCurrency(remainingDue)}
+                </Text>
+              </View>
+              <View style={[styles.calcDivider, { backgroundColor: colors.divider }]} />
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Previous Vendor Outstanding:</Text>
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: previousVendorOutstanding > 0 ? colors.warning : colors.textSecondary,
+                      fontWeight: '600',
+                    },
+                  ]}
+                >
+                  {formatCurrency(previousVendorOutstanding)}
+                </Text>
+              </View>
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, { color: colors.text, fontWeight: '700' }]}>Total Vendor Outstanding:</Text>
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: totalVendorOutstanding > 0 ? colors.danger : colors.success,
+                      fontSize: 14,
+                      fontWeight: '700',
+                    },
+                  ]}
+                >
+                  {formatCurrency(totalVendorOutstanding)}
+                </Text>
+              </View>
+              <View style={[styles.calcDivider, { backgroundColor: colors.divider }]} />
+              <View style={styles.summaryRow}>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary, fontSize: 11 }]}>Payment Status:</Text>
+                <Text
+                  style={[
+                    styles.summaryValue,
+                    {
+                      color: paymentStatusBadgeType === 'danger' ? colors.danger : paymentStatusBadgeType === 'warning' ? colors.warning : colors.success,
+                      fontSize: 12,
+                      fontWeight: '700',
+                    },
+                  ]}
+                >
+                  {paymentStatusLabel}
                 </Text>
               </View>
             </View>
@@ -385,8 +514,9 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
 
           <Button
             title={isEdit ? 'Update Purchase' : 'Create Purchase'}
-            onPress={handleSubmit(onSubmit as any)}
+            onPress={handleSubmit(handleFormSubmit as any)}
             loading={loading}
+            disabled={isPaidAmountInvalid}
             style={styles.submitButton}
           />
         </View>
@@ -400,6 +530,16 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
           if (activeItemIndex !== null) {
             handleProductChange(activeItemIndex, productId);
           }
+        }}
+      />
+
+      <SupplierCreateModal
+        visible={supplierModalVisible}
+        onClose={() => setSupplierModalVisible(false)}
+        initialName={typedSupplierName}
+        onSuccess={(supplierId) => {
+          setValue('vendorId', supplierId);
+          setSupplierModalVisible(false);
         }}
       />
     </ScrollView>
@@ -418,6 +558,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    marginBottom: spacing.md,
+  },
+  paymentSectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: spacing.md,
   },
   formRow: {
@@ -594,6 +740,16 @@ const styles = StyleSheet.create({
   removePhotoBtn: {
     height: 32,
     paddingHorizontal: spacing.sm,
+  },
+  paymentCalcBox: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: spacing.md,
+    gap: spacing.xs,
+  },
+  calcDivider: {
+    height: 1,
+    marginVertical: 4,
   },
 });
 

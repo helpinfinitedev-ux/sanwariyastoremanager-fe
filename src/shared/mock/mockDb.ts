@@ -52,14 +52,49 @@ export interface Product {
 
 export interface Vendor {
   id: string;
+  firmName: string;
   name: string;
   code: string;
-  contactPerson: string;
+  contactPerson?: string;
   phone: string;
   email: string;
   address: string;
   gstin?: string;
-  paymentTerms?: string;
+  paymentTerms: 'Cash on Delivery' | '7 Days' | '15 Days' | '30 Days' | 'Custom';
+  openingBalance: number;
+  status: 'Active' | 'Inactive';
+}
+
+export type PaymentMethod = 'Cash' | 'UPI' | 'Bank Transfer' | 'Card' | 'Cheque' | 'Other';
+
+export interface VendorPayment {
+  id: string;
+  vendorId: string;
+  purchaseId?: string;
+  invoiceNo?: string;
+  date: string;
+  amount: number;
+  paymentMethod: PaymentMethod | string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface PurchasePaymentRecord {
+  id: string;
+  date: string;
+  amount: number;
+  paymentMethod: PaymentMethod | string;
+  reference?: string;
+  notes?: string;
+}
+
+export interface OtherExpense {
+  id: string;
+  category: string;
+  amount: number;
+  date: string;
+  paymentMethod: 'Cash' | 'Bank Transfer' | 'UPI' | 'Card' | 'Cheque' | 'Other';
+  remark: string;
 }
 
 export interface PurchaseItem {
@@ -79,6 +114,11 @@ export interface Purchase {
   deliveryDate: string;
   items: PurchaseItem[];
   totalAmount: number;
+  paidAmount: number;
+  dueAmount: number;
+  paymentStatus: 'PAID' | 'PARTIAL' | 'CREDIT';
+  paymentMethod?: PaymentMethod | string;
+  paymentHistory?: PurchasePaymentRecord[];
   status: 'Draft' | 'Submitted';
   notes?: string;
   photoUrl?: string;
@@ -156,11 +196,76 @@ export const KITCHEN_SECTIONS = [
 ];
 
 const VENDORS_SEED: Vendor[] = [
-  { id: 'v1', name: 'Metro Cash & Carry', code: 'VND-METRO', contactPerson: 'John Doe', phone: '+1 555-0199', email: 'orders@metro.com', address: '45 Wholesale Ave, Industrial Zone' },
-  { id: 'v2', name: 'Fresh Fields Organics', code: 'VND-FIELDS', contactPerson: 'Sarah Jenkins', phone: '+1 555-0144', email: 'sales@freshfields.com', address: '12 Farmhouse Road, Countryside' },
-  { id: 'v3', name: 'Apex Packaging Suppliers', code: 'VND-APEX', contactPerson: 'Robert Chen', phone: '+1 555-0211', email: 'accounts@apexpack.com', address: '99 Box Road, Logistics Park' },
-  { id: 'v4', name: 'Premium Meat Co.', code: 'VND-PREMMEAT', contactPerson: 'Mark Miller', phone: '+1 555-0300', email: 'orders@premiummeat.com', address: '88 Butcher Street, Portside' },
-  { id: 'v5', name: 'Deluxe Dairy Distributor', code: 'VND-DELUXED', contactPerson: 'Anna Smith', phone: '+1 555-0455', email: 'info@deluxedairy.com', address: '77 Milking Way, Creamery Valley' },
+  {
+    id: 'v1',
+    firmName: 'Raj Traders Pvt Ltd',
+    name: 'Raj Kumar',
+    code: 'VND-RAJ',
+    contactPerson: 'Raj Kumar',
+    phone: '+91 98765 43210',
+    email: 'sales@rajtraders.com',
+    address: 'Sigra Main Road, Varanasi',
+    gstin: '09AABCR1234M1Z5',
+    paymentTerms: '15 Days',
+    openingBalance: 0,
+    status: 'Active',
+  },
+  {
+    id: 'v2',
+    firmName: 'Sharma Foods & Grains',
+    name: 'Sanjay Sharma',
+    code: 'VND-SHARMA',
+    contactPerson: 'Sanjay Sharma',
+    phone: '+91 98123 45678',
+    email: 'orders@sharmafoods.com',
+    address: 'Gola Gali, Chowk, Varanasi',
+    gstin: '09BCDEF5678N2Z9',
+    paymentTerms: '7 Days',
+    openingBalance: 0,
+    status: 'Active',
+  },
+  {
+    id: 'v3',
+    firmName: 'Apex Packaging Suppliers',
+    name: 'Robert Chen',
+    code: 'VND-APEX',
+    contactPerson: 'Robert Chen',
+    phone: '+91 97654 32109',
+    email: 'accounts@apexpack.com',
+    address: 'Logistics Park, Kanpur',
+    gstin: '09CDEFG9012P3Z1',
+    paymentTerms: '30 Days',
+    openingBalance: 0,
+    status: 'Active',
+  },
+  {
+    id: 'v4',
+    firmName: 'Premium Meat & Poultry Co.',
+    name: 'Mark Miller',
+    code: 'VND-MEAT',
+    contactPerson: 'Mark Miller',
+    phone: '+91 96543 21098',
+    email: 'orders@premiummeat.com',
+    address: 'Mahi Mandi, Varanasi',
+    gstin: '09DEFGH3456Q4Z3',
+    paymentTerms: 'Cash on Delivery',
+    openingBalance: 0,
+    status: 'Active',
+  },
+  {
+    id: 'v5',
+    firmName: 'Deluxe Dairy Distributor',
+    name: 'Anna Smith',
+    code: 'VND-DELUXE',
+    contactPerson: 'Anna Smith',
+    phone: '+91 95432 10987',
+    email: 'info@deluxedairy.com',
+    address: 'Dairy Colony, Lucknow',
+    gstin: '09EFGHI7890R5Z7',
+    paymentTerms: '15 Days',
+    openingBalance: 0,
+    status: 'Active',
+  },
 ];
 
 const PRODUCTS_SEED: Product[] = [
@@ -210,6 +315,8 @@ class InMemoryDb {
   products: Product[] = [...PRODUCTS_SEED];
   vendors: Vendor[] = [...VENDORS_SEED];
   purchases: Purchase[] = [];
+  vendorPayments: VendorPayment[] = [];
+  otherExpenses: OtherExpense[] = [];
   kitchenIssues: KitchenIssue[] = [];
   wasteEntries: WasteEntry[] = [];
   movements: StockMovement[] = [];
@@ -267,64 +374,325 @@ class InMemoryDb {
 
   // Pre-seed some operations to show historical graphs & tables on load
   private seedOperations() {
-    // 1. Pre-seed Purchases
+    // 1. Pre-seed Purchases with payment details
     const initialPurchases: Purchase[] = [
       {
         id: 'po-1001',
         invoiceNo: 'INV-2026-001',
         vendorId: 'v1',
-        vendorName: 'Metro Cash & Carry',
-        orderDate: '2026-08-01T10:00:00Z',
-        deliveryDate: '2026-08-01T15:00:00Z',
-        totalAmount: 187.0,
+        vendorName: 'Raj Traders Pvt Ltd',
+        orderDate: '2026-09-01T10:00:00Z',
+        deliveryDate: '2026-09-01T15:00:00Z',
+        totalAmount: 20000,
+        paidAmount: 20000,
+        dueAmount: 0,
+        paymentStatus: 'PAID',
+        paymentMethod: 'Bank Transfer',
         status: 'Submitted',
-        notes: 'Initial monthly seed pantry items',
+        notes: 'Monthly staples restock - Sugar & Flour',
         items: [
-          { productId: 'p7', productName: 'All-Purpose Flour 25kg', quantity: 5, unitCost: 22.0, subtotal: 110.0 },
-          { productId: 'p8', productName: 'White Sugar 10kg', quantity: 5, unitCost: 10.5, subtotal: 52.5 },
-          { productId: 'p14', productName: 'Canola Frying Oil 5L', quantity: 2, unitCost: 12.2, subtotal: 24.5 },
+          { productId: 'p8', productName: 'White Sugar 10kg', quantity: 50, unitCost: 45, subtotal: 2250 },
+          { productId: 'p7', productName: 'All-Purpose Flour 25kg', quantity: 20, unitCost: 550, subtotal: 11000 },
+          { productId: 'p14', productName: 'Canola Frying Oil 5L', quantity: 10, unitCost: 675, subtotal: 6750 },
         ],
       },
       {
         id: 'po-1002',
         invoiceNo: 'INV-2026-002',
-        vendorId: 'v4',
-        vendorName: 'Premium Meat Co.',
-        orderDate: '2026-08-03T09:30:00Z',
-        deliveryDate: '2026-08-03T14:00:00Z',
-        totalAmount: 432.0,
+        vendorId: 'v1',
+        vendorName: 'Raj Traders Pvt Ltd',
+        orderDate: '2026-09-05T11:30:00Z',
+        deliveryDate: '2026-09-05T16:00:00Z',
+        totalAmount: 35000,
+        paidAmount: 15000,
+        dueAmount: 20000,
+        paymentStatus: 'PARTIAL',
+        paymentMethod: 'Cash',
         status: 'Submitted',
+        notes: 'Bulk Sugar & Rice restock',
         items: [
-          { productId: 'p5', productName: 'Chicken Breast 1kg', quantity: 40, unitCost: 5.5, subtotal: 220.0 },
-          { productId: 'p6', productName: 'Beef Tenderloin 1kg', quantity: 15, unitCost: 14.13, subtotal: 212.0 },
+          { productId: 'p8', productName: 'White Sugar 10kg', quantity: 40, unitCost: 45, subtotal: 1800 },
+          { productId: 'p9', productName: 'Basmati Rice 20kg', quantity: 20, unitCost: 1660, subtotal: 33200 },
         ],
       },
       {
         id: 'po-1003',
         invoiceNo: 'INV-2026-003',
+        vendorId: 'v2',
+        vendorName: 'Sharma Foods & Grains',
+        orderDate: '2026-09-02T09:00:00Z',
+        deliveryDate: '2026-09-02T14:00:00Z',
+        totalAmount: 18500,
+        paidAmount: 18500,
+        dueAmount: 0,
+        paymentStatus: 'PAID',
+        paymentMethod: 'UPI',
+        status: 'Submitted',
+        notes: 'Spices & Cooking Oil',
+        items: [
+          { productId: 'p14', productName: 'Canola Frying Oil 5L', quantity: 20, unitCost: 625, subtotal: 12500 },
+          { productId: 'p20', productName: 'Fine Table Salt 5kg', quantity: 20, unitCost: 300, subtotal: 6000 },
+        ],
+      },
+      {
+        id: 'po-1004',
+        invoiceNo: 'INV-2026-004',
+        vendorId: 'v2',
+        vendorName: 'Sharma Foods & Grains',
+        orderDate: '2026-09-09T14:00:00Z',
+        deliveryDate: '2026-09-09T18:00:00Z',
+        totalAmount: 12000,
+        paidAmount: 4000,
+        dueAmount: 8000,
+        paymentStatus: 'PARTIAL',
+        paymentMethod: 'Cash',
+        status: 'Submitted',
+        notes: 'Sugar & Spices',
+        items: [
+          { productId: 'p8', productName: 'White Sugar 10kg', quantity: 60, unitCost: 45, subtotal: 2700 },
+          { productId: 'p19', productName: 'Dried Oregano 500g', quantity: 15, unitCost: 620, subtotal: 9300 },
+        ],
+      },
+      {
+        id: 'po-1005',
+        invoiceNo: 'INV-2026-005',
+        vendorId: 'v3',
+        vendorName: 'Apex Packaging Suppliers',
+        orderDate: '2026-09-04T10:00:00Z',
+        deliveryDate: '2026-09-04T15:00:00Z',
+        totalAmount: 15400,
+        paidAmount: 0,
+        dueAmount: 15400,
+        paymentStatus: 'CREDIT',
+        status: 'Submitted',
+        notes: 'Pizza Boxes & Paper Cups delivery',
+        items: [
+          { productId: 'p15', productName: 'Pizza Boxes 12in (100pcs)', quantity: 10, unitCost: 750, subtotal: 7500 },
+          { productId: 'p16', productName: 'Hot Paper Cups 8oz (500pcs)', quantity: 5, unitCost: 1580, subtotal: 7900 },
+        ],
+      },
+      {
+        id: 'po-1006',
+        invoiceNo: 'INV-2026-006',
+        vendorId: 'v4',
+        vendorName: 'Premium Meat & Poultry Co.',
+        orderDate: '2026-09-06T08:30:00Z',
+        deliveryDate: '2026-09-06T12:00:00Z',
+        totalAmount: 24500,
+        paidAmount: 24500,
+        dueAmount: 0,
+        paymentStatus: 'PAID',
+        paymentMethod: 'Cash',
+        status: 'Submitted',
+        notes: 'Fresh Chicken & Beef supply',
+        items: [
+          { productId: 'p5', productName: 'Chicken Breast 1kg', quantity: 50, unitCost: 280, subtotal: 14000 },
+          { productId: 'p6', productName: 'Beef Tenderloin 1kg', quantity: 15, unitCost: 700, subtotal: 10500 },
+        ],
+      },
+      {
+        id: 'po-1007',
+        invoiceNo: 'INV-2026-007',
         vendorId: 'v5',
         vendorName: 'Deluxe Dairy Distributor',
-        orderDate: '2026-08-05T08:00:00Z',
-        deliveryDate: '',
-        totalAmount: 216.0,
-        status: 'Draft',
-        notes: 'Pending confirmation of butter prices',
+        orderDate: '2026-09-07T07:30:00Z',
+        deliveryDate: '2026-09-07T10:00:00Z',
+        totalAmount: 14600,
+        paidAmount: 6000,
+        dueAmount: 8600,
+        paymentStatus: 'PARTIAL',
+        paymentMethod: 'UPI',
+        status: 'Submitted',
+        notes: 'Milk, Butter & Cheese delivery',
         items: [
-          { productId: 'p1', productName: 'Whole Milk 1L', quantity: 60, unitCost: 1.5, subtotal: 90.0 },
-          { productId: 'p3', productName: 'Unsalted Butter 500g', quantity: 30, unitCost: 3.2, subtotal: 96.0 },
-          { productId: 'p2', productName: 'Eggs Large (Tray of 30)', quantity: 6, unitCost: 5.0, subtotal: 30.0 },
+          { productId: 'p1', productName: 'Whole Milk 1L', quantity: 100, unitCost: 60, subtotal: 6000 },
+          { productId: 'p3', productName: 'Unsalted Butter 500g', quantity: 20, unitCost: 230, subtotal: 4600 },
+          { productId: 'p4', productName: 'Mozzarella Cheese 1kg', quantity: 8, unitCost: 500, subtotal: 4000 },
+        ],
+      },
+      {
+        id: 'po-1008',
+        invoiceNo: 'INV-2026-008',
+        vendorId: 'v1',
+        vendorName: 'Raj Traders Pvt Ltd',
+        orderDate: '2026-09-15T10:00:00Z',
+        deliveryDate: '2026-09-15T14:00:00Z',
+        totalAmount: 18000,
+        paidAmount: 9000,
+        dueAmount: 9000,
+        paymentStatus: 'PARTIAL',
+        paymentMethod: 'Bank Transfer',
+        status: 'Submitted',
+        notes: 'Sugar & Grain restock mid-month',
+        items: [
+          { productId: 'p8', productName: 'White Sugar 10kg', quantity: 100, unitCost: 45, subtotal: 4500 },
+          { productId: 'p7', productName: 'All-Purpose Flour 25kg', quantity: 25, unitCost: 540, subtotal: 13500 },
         ],
       },
     ];
 
     this.purchases = initialPurchases;
 
+    // Seed initial Payments
+    this.vendorPayments = [
+      {
+        id: 'vp-101',
+        vendorId: 'v1',
+        purchaseId: 'po-1001',
+        invoiceNo: 'INV-2026-001',
+        date: '2026-09-01T15:30:00Z',
+        amount: 20000,
+        paymentMethod: 'Bank Transfer',
+        reference: 'UTR9812739182',
+        notes: 'Full payment for INV-2026-001',
+      },
+      {
+        id: 'vp-102',
+        vendorId: 'v1',
+        purchaseId: 'po-1002',
+        invoiceNo: 'INV-2026-002',
+        date: '2026-09-05T16:30:00Z',
+        amount: 15000,
+        paymentMethod: 'Cash',
+        reference: 'CASH-REC-05',
+        notes: 'Advance partial payment for INV-2026-002',
+      },
+      {
+        id: 'vp-103',
+        vendorId: 'v2',
+        purchaseId: 'po-1003',
+        invoiceNo: 'INV-2026-003',
+        date: '2026-09-02T14:30:00Z',
+        amount: 18500,
+        paymentMethod: 'UPI',
+        reference: 'UPI/9817293817/Sharma',
+        notes: 'Paid via PhonePe UPI',
+      },
+      {
+        id: 'vp-104',
+        vendorId: 'v2',
+        purchaseId: 'po-1004',
+        invoiceNo: 'INV-2026-004',
+        date: '2026-09-09T18:30:00Z',
+        amount: 4000,
+        paymentMethod: 'Cash',
+        notes: 'Partial payment on delivery',
+      },
+      {
+        id: 'vp-105',
+        vendorId: 'v1',
+        purchaseId: 'po-1008',
+        invoiceNo: 'INV-2026-008',
+        date: '2026-09-15T15:00:00Z',
+        amount: 9000,
+        paymentMethod: 'Bank Transfer',
+        reference: 'UTR8871625341',
+        notes: 'Half payment for mid-month sugar batch',
+      },
+    ];
+
+    // Populate initial paymentHistory on purchases
+    initialPurchases.forEach(p => {
+      const payments = this.vendorPayments.filter(vp => vp.purchaseId === p.id);
+      p.paymentHistory = payments.map(vp => ({
+        id: vp.id,
+        date: vp.date,
+        amount: vp.amount,
+        paymentMethod: vp.paymentMethod,
+        reference: vp.reference,
+        notes: vp.notes,
+      }));
+    });
+
+    // Seed 10+ Other Expenses
+    this.otherExpenses = [
+      {
+        id: 'exp-1',
+        category: 'Electricity',
+        amount: 8500,
+        date: '2026-09-01T10:00:00Z',
+        paymentMethod: 'Bank Transfer',
+        remark: 'September electricity bill for main dining & store room',
+      },
+      {
+        id: 'exp-2',
+        category: 'Gas',
+        amount: 4200,
+        date: '2026-09-02T11:15:00Z',
+        paymentMethod: 'Cash',
+        remark: 'Commercial LPG cylinder refill (3 cylinders)',
+      },
+      {
+        id: 'exp-3',
+        category: 'Transport',
+        amount: 1200,
+        date: '2026-09-03T14:00:00Z',
+        paymentMethod: 'Cash',
+        remark: 'Raw material auto transport from Mandi',
+      },
+      {
+        id: 'exp-4',
+        category: 'Repair',
+        amount: 2500,
+        date: '2026-09-04T16:30:00Z',
+        paymentMethod: 'UPI',
+        remark: 'Refrigerator compressor servicing and gas refill',
+      },
+      {
+        id: 'exp-5',
+        category: 'Cleaning',
+        amount: 1800,
+        date: '2026-09-05T09:00:00Z',
+        paymentMethod: 'Cash',
+        remark: 'Store room pest control & deep cleaning chemical purchase',
+      },
+      {
+        id: 'exp-6',
+        category: 'Maintenance',
+        amount: 3200,
+        date: '2026-09-06T12:00:00Z',
+        paymentMethod: 'UPI',
+        remark: 'Exhaust fan belt replacement & kitchen hood maintenance',
+      },
+      {
+        id: 'exp-7',
+        category: 'Salary',
+        amount: 15000,
+        date: '2026-09-07T10:00:00Z',
+        paymentMethod: 'Bank Transfer',
+        remark: 'Helper staff advance salary payout',
+      },
+      {
+        id: 'exp-8',
+        category: 'Office',
+        amount: 950,
+        date: '2026-09-08T15:00:00Z',
+        paymentMethod: 'Cash',
+        remark: 'Billing thermal paper rolls & printer ink cartridges',
+      },
+      {
+        id: 'exp-9',
+        category: 'Gas',
+        amount: 2800,
+        date: '2026-09-10T11:00:00Z',
+        paymentMethod: 'Cash',
+        remark: 'Emergency LPG cylinder replacement',
+      },
+      {
+        id: 'exp-10',
+        category: 'Miscellaneous',
+        amount: 650,
+        date: '2026-09-12T17:00:00Z',
+        paymentMethod: 'Cash',
+        remark: 'Tea, coffee, and refreshments for store delivery drivers',
+      },
+    ];
+
     // Apply stock change for submitted purchases in seed
     initialPurchases.forEach(p => {
       if (p.status === 'Submitted') {
         p.items.forEach(item => {
           const prod = this.products.find(pr => pr.id === item.productId);
-          // Just track movement record
           if (prod) {
             this.movements.push({
               id: `mvt-${Math.random().toString(36).substr(2, 9)}`,
@@ -333,7 +701,7 @@ class InMemoryDb {
               productId: item.productId,
               productName: prod.name,
               quantityChange: item.quantity,
-              balanceAfter: prod.currentStock, // Seeded stock is final
+              balanceAfter: prod.currentStock,
               referenceId: p.id,
             });
           }
@@ -343,7 +711,7 @@ class InMemoryDb {
           timestamp: p.orderDate,
           type: 'purchase',
           actor: 'Store Manager',
-          description: `Received purchase delivery from ${p.vendorName}. Invoice: ${p.invoiceNo}. Total: ₹${p.totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+          description: `Received purchase delivery from ${p.vendorName}. Invoice: ${p.invoiceNo}. Total: ₹${p.totalAmount.toLocaleString('en-IN')}`,
           referenceId: p.id,
         });
       }
@@ -461,11 +829,10 @@ class InMemoryDb {
   // MUTATIONS (REAL INTERNALS)
   // ----------------------------------------------------
 
-  // 1. Purchase Operations
-  createPurchase(purchaseData: Omit<Purchase, 'id' | 'vendorName' | 'totalAmount'>) {
+  createPurchase(purchaseData: Omit<Purchase, 'id' | 'vendorName' | 'totalAmount' | 'paidAmount' | 'dueAmount' | 'paymentStatus'> & { paidAmount?: number; paymentMethod?: PaymentMethod | string }) {
     const id = `po-${Math.floor(1000 + Math.random() * 9000)}`;
     const vendor = this.vendors.find(v => v.id === purchaseData.vendorId);
-    const vendorName = vendor ? vendor.name : 'Unknown Vendor';
+    const vendorName = vendor ? (vendor.firmName || vendor.name) : 'Unknown Vendor';
     
     // Auto calculate totals
     const items = purchaseData.items.map(item => {
@@ -480,6 +847,39 @@ class InMemoryDb {
     });
 
     const totalAmount = parseFloat(items.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
+    const paidAmount = Math.min(totalAmount, Number(purchaseData.paidAmount) || 0);
+    const dueAmount = Math.max(0, totalAmount - paidAmount);
+    
+    let paymentStatus: 'PAID' | 'PARTIAL' | 'CREDIT' = 'CREDIT';
+    if (dueAmount === 0 && totalAmount > 0) {
+      paymentStatus = 'PAID';
+    } else if (paidAmount > 0) {
+      paymentStatus = 'PARTIAL';
+    }
+
+    const paymentHistory: PurchasePaymentRecord[] = [];
+    if (paidAmount > 0) {
+      const paymentRecord: PurchasePaymentRecord = {
+        id: `vp-${Math.floor(100 + Math.random() * 900)}`,
+        date: purchaseData.orderDate || new Date().toISOString(),
+        amount: paidAmount,
+        paymentMethod: purchaseData.paymentMethod || 'Cash',
+        reference: `INIT-${purchaseData.invoiceNo || 'INV'}`,
+        notes: `Initial payment for invoice ${purchaseData.invoiceNo}`,
+      };
+      paymentHistory.push(paymentRecord);
+      this.vendorPayments.unshift({
+        id: paymentRecord.id,
+        vendorId: purchaseData.vendorId,
+        purchaseId: id,
+        invoiceNo: purchaseData.invoiceNo,
+        date: paymentRecord.date,
+        amount: paidAmount,
+        paymentMethod: paymentRecord.paymentMethod,
+        notes: paymentRecord.notes,
+        reference: paymentRecord.reference,
+      });
+    }
 
     const newPurchase: Purchase = {
       ...purchaseData,
@@ -487,6 +887,11 @@ class InMemoryDb {
       vendorName,
       items,
       totalAmount,
+      paidAmount,
+      dueAmount,
+      paymentStatus,
+      paymentMethod: purchaseData.paymentMethod,
+      paymentHistory,
     };
 
     this.purchases.unshift(newPurchase);
@@ -507,12 +912,10 @@ class InMemoryDb {
 
     const original = this.purchases[idx];
     
-    // We do not allow changing status of already submitted purchase to Draft
     if (original.status === 'Submitted' && updates.status === 'Draft') {
       throw new Error('Cannot revert a submitted purchase to draft status');
     }
 
-    // Merge changes
     const updatedItems = updates.items 
       ? updates.items.map(item => {
           const prod = this.products.find(pr => pr.id === item.productId);
@@ -525,24 +928,61 @@ class InMemoryDb {
       : original.items;
 
     const totalAmount = parseFloat(updatedItems.reduce((sum, item) => sum + item.subtotal, 0).toFixed(2));
+    const paidAmount = updates.paidAmount !== undefined ? Math.min(totalAmount, Number(updates.paidAmount)) : original.paidAmount;
+    const dueAmount = Math.max(0, totalAmount - paidAmount);
 
-    const merged: Purchase = {
-      ...original,
-      ...updates,
-      items: updatedItems,
-      totalAmount,
-    };
-
-    this.purchases[idx] = merged;
-
-    // Check transition from Draft -> Submitted
-    if (original.status === 'Draft' && merged.status === 'Submitted') {
-      this.processSubmittedPurchase(merged);
-    } else {
-      this.logActivity('purchase', `Updated purchase order ${merged.invoiceNo}`, id);
+    let paymentStatus: 'PAID' | 'PARTIAL' | 'CREDIT' = 'CREDIT';
+    if (dueAmount === 0 && totalAmount > 0) {
+      paymentStatus = 'PAID';
+    } else if (paidAmount > 0) {
+      paymentStatus = 'PARTIAL';
     }
 
-    return merged;
+    let paymentHistory = original.paymentHistory || [];
+    if (updates.paidAmount !== undefined && updates.paidAmount > original.paidAmount) {
+      const diff = updates.paidAmount - original.paidAmount;
+      const additionalRecord: PurchasePaymentRecord = {
+        id: `vp-${Math.floor(100 + Math.random() * 900)}`,
+        date: new Date().toISOString(),
+        amount: diff,
+        paymentMethod: updates.paymentMethod || original.paymentMethod || 'Cash',
+        reference: `UPDATE-${original.invoiceNo}`,
+        notes: `Additional payment during invoice edit`,
+      };
+      paymentHistory = [additionalRecord, ...paymentHistory];
+      this.vendorPayments.unshift({
+        id: additionalRecord.id,
+        vendorId: original.vendorId,
+        purchaseId: original.id,
+        invoiceNo: original.invoiceNo,
+        date: additionalRecord.date,
+        amount: diff,
+        paymentMethod: additionalRecord.paymentMethod,
+        notes: additionalRecord.notes,
+        reference: additionalRecord.reference,
+      });
+    }
+
+    const updatedVendor = updates.vendorId ? this.vendors.find(v => v.id === updates.vendorId) : undefined;
+    const vendorName = updatedVendor ? (updatedVendor.firmName || updatedVendor.name) : original.vendorName;
+
+    this.purchases[idx] = {
+      ...original,
+      ...updates,
+      vendorName,
+      items: updatedItems,
+      totalAmount,
+      paidAmount,
+      dueAmount,
+      paymentStatus,
+      paymentHistory,
+    };
+
+    if (original.status === 'Draft' && updates.status === 'Submitted') {
+      this.processSubmittedPurchase(this.purchases[idx]);
+    }
+
+    return this.purchases[idx];
   }
 
   private processSubmittedPurchase(p: Purchase) {
@@ -776,22 +1216,268 @@ class InMemoryDb {
     return newReason;
   }
 
-  createSupplier(vendorData: Omit<Vendor, 'id' | 'code'>) {
-    const exists = this.vendors.some(v => v.name.trim().toLowerCase() === vendorData.name.trim().toLowerCase());
-    if (exists) throw new Error('Supplier already exists.');
+  // ----------------------------------------------------
+  // VENDOR & EXPENSES EXTENDED OPERATIONS
+  // ----------------------------------------------------
+
+  getVendors() {
+    return this.vendors.map(v => {
+      const summary = this.getVendorSummary(v.id);
+      return {
+        ...v,
+        totalPurchase: summary.totalPurchase,
+        totalPaid: summary.totalPaid,
+        outstanding: summary.outstanding,
+      };
+    });
+  }
+
+  getVendorById(id: string) {
+    const v = this.vendors.find(item => item.id === id);
+    if (!v) return undefined;
+    const summary = this.getVendorSummary(v.id);
+    return {
+      ...v,
+      totalPurchase: summary.totalPurchase,
+      totalPaid: summary.totalPaid,
+      outstanding: summary.outstanding,
+    };
+  }
+
+  createVendor(vendorData: Omit<Vendor, 'id' | 'code' | 'status'> & { status?: 'Active' | 'Inactive' }) {
+    const exists = this.vendors.some(v => v.firmName.trim().toLowerCase() === vendorData.firmName.trim().toLowerCase());
+    if (exists) throw new Error('Vendor with this Firm Name already exists.');
 
     const id = `v${this.vendors.length + 1}`;
-    const code = `VND-${vendorData.name.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5)}`;
+    const code = `VND-${vendorData.firmName.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 5)}`;
     
     const newVendor: Vendor = {
       ...vendorData,
       id,
       code,
+      status: vendorData.status || 'Active',
+      firmName: vendorData.firmName.trim(),
       name: vendorData.name.trim(),
+      openingBalance: Number(vendorData.openingBalance) || 0,
     };
     this.vendors.push(newVendor);
-    this.logActivity('system', `Added new supplier vendor: ${newVendor.name}`);
-    return newVendor;
+    this.logActivity('system', `Added new vendor firm: ${newVendor.firmName} (${newVendor.name})`);
+    return this.getVendorById(id) as Vendor;
+  }
+
+  createSupplier(vendorData: Omit<Vendor, 'id' | 'code' | 'status'> & { status?: 'Active' | 'Inactive' }) {
+    return this.createVendor(vendorData);
+  }
+
+  updateVendor(id: string, vendorData: Partial<Vendor>) {
+    const index = this.vendors.findIndex(v => v.id === id);
+    if (index === -1) throw new Error('Vendor not found.');
+
+    this.vendors[index] = {
+      ...this.vendors[index],
+      ...vendorData,
+    };
+    this.logActivity('system', `Updated vendor details for: ${this.vendors[index].firmName}`);
+    return this.getVendorById(id);
+  }
+
+  getVendorSummary(vendorId: string) {
+    const vendorPurchases = this.purchases.filter(p => p.vendorId === vendorId && p.status === 'Submitted');
+    const totalPurchase = vendorPurchases.reduce((sum, p) => sum + p.totalAmount, 0);
+    const totalPaid = vendorPurchases.reduce((sum, p) => sum + (p.paidAmount || 0), 0);
+    const outstanding = vendorPurchases.reduce((sum, p) => sum + (p.dueAmount || 0), 0);
+
+    return {
+      totalPurchase,
+      totalPaid,
+      outstanding,
+    };
+  }
+
+  getVendorLedger(vendorId: string) {
+    // Collect all purchases & payments for vendor
+    const vendorPurchases = this.purchases.filter(p => p.vendorId === vendorId && p.status === 'Submitted');
+    const vendorPayments = this.vendorPayments.filter(p => p.vendorId === vendorId);
+
+    type LedgerEntry = {
+      id: string;
+      date: string;
+      type: 'Purchase' | 'Payment';
+      reference: string;
+      purchaseAmount: number;
+      paymentAmount: number;
+      balance: number;
+      notes?: string;
+    };
+
+    const entries: Omit<LedgerEntry, 'balance'>[] = [];
+
+    vendorPurchases.forEach(p => {
+      entries.push({
+        id: p.id,
+        date: p.orderDate,
+        type: 'Purchase',
+        reference: p.invoiceNo || p.id,
+        purchaseAmount: p.totalAmount,
+        paymentAmount: 0,
+        notes: `Purchase (${p.items.length} items)`,
+      });
+    });
+
+    vendorPayments.forEach(pm => {
+      entries.push({
+        id: pm.id,
+        date: pm.date,
+        type: 'Payment',
+        reference: pm.invoiceNo ? `Payment (${pm.invoiceNo})` : pm.reference || 'Payment',
+        purchaseAmount: 0,
+        paymentAmount: pm.amount,
+        notes: pm.notes || `Paid via ${pm.paymentMethod}`,
+      });
+    });
+
+    // Sort chronologically ascending
+    entries.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    let runningBalance = 0;
+    const ledger: LedgerEntry[] = entries.map(entry => {
+      runningBalance = runningBalance + entry.purchaseAmount - entry.paymentAmount;
+      return {
+        ...entry,
+        balance: Math.max(0, runningBalance),
+      };
+    });
+
+    return ledger;
+  }
+
+  makeVendorPayment(paymentData: {
+    vendorId: string;
+    purchaseId?: string;
+    invoiceNo?: string;
+    amount: number;
+    paymentMethod: PaymentMethod | string;
+    reference?: string;
+    notes?: string;
+    date?: string;
+  }) {
+    const vendor = this.vendors.find(v => v.id === paymentData.vendorId);
+    if (!vendor) throw new Error('Vendor not found.');
+
+    const date = paymentData.date || new Date().toISOString();
+    const id = `vp-${Math.floor(100 + Math.random() * 900)}`;
+
+    const newPayment: VendorPayment = {
+      id,
+      vendorId: paymentData.vendorId,
+      purchaseId: paymentData.purchaseId,
+      invoiceNo: paymentData.invoiceNo,
+      date,
+      amount: Number(paymentData.amount),
+      paymentMethod: paymentData.paymentMethod,
+      reference: paymentData.reference,
+      notes: paymentData.notes,
+    };
+
+    this.vendorPayments.unshift(newPayment);
+
+    // If payment is linked to a specific purchase or general payment
+    if (paymentData.purchaseId) {
+      const purchase = this.purchases.find(p => p.id === paymentData.purchaseId);
+      if (purchase) {
+        if (!purchase.paymentHistory) purchase.paymentHistory = [];
+        purchase.paymentHistory.unshift({
+          id: newPayment.id,
+          date: newPayment.date,
+          amount: newPayment.amount,
+          paymentMethod: newPayment.paymentMethod,
+          reference: newPayment.reference,
+          notes: newPayment.notes,
+        });
+
+        purchase.paidAmount = Math.min(purchase.totalAmount, purchase.paidAmount + newPayment.amount);
+        purchase.dueAmount = Math.max(0, purchase.totalAmount - purchase.paidAmount);
+        if (purchase.dueAmount === 0) {
+          purchase.paymentStatus = 'PAID';
+        } else if (purchase.paidAmount > 0) {
+          purchase.paymentStatus = 'PARTIAL';
+        }
+      }
+    } else {
+      // Apply payment to oldest unpaid purchases for vendor
+      let remainingPayment = newPayment.amount;
+      const unpaidPurchases = this.purchases
+        .filter(p => p.vendorId === paymentData.vendorId && p.dueAmount > 0 && p.status === 'Submitted')
+        .sort((a, b) => new Date(a.orderDate).getTime() - new Date(b.orderDate).getTime());
+
+      for (const p of unpaidPurchases) {
+        if (remainingPayment <= 0) break;
+        const payForThis = Math.min(p.dueAmount, remainingPayment);
+        p.paidAmount += payForThis;
+        p.dueAmount -= payForThis;
+        remainingPayment -= payForThis;
+
+        if (!p.paymentHistory) p.paymentHistory = [];
+        p.paymentHistory.unshift({
+          id: newPayment.id,
+          date: newPayment.date,
+          amount: payForThis,
+          paymentMethod: newPayment.paymentMethod,
+          reference: newPayment.reference,
+          notes: newPayment.notes || 'General vendor payment applied',
+        });
+
+        if (p.dueAmount === 0) {
+          p.paymentStatus = 'PAID';
+        } else if (p.paidAmount > 0) {
+          p.paymentStatus = 'PARTIAL';
+        }
+      }
+    }
+
+    this.logActivity('system', `Made ₹${newPayment.amount.toLocaleString('en-IN')} payment to ${vendor.firmName} (${newPayment.paymentMethod})`);
+    return newPayment;
+  }
+
+  // Other Expenses Operations
+  getOtherExpenses() {
+    return [...this.otherExpenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }
+
+  createOtherExpense(expenseData: Omit<OtherExpense, 'id'>) {
+    const id = `exp-${Math.floor(100 + Math.random() * 900)}`;
+    const newExpense: OtherExpense = {
+      ...expenseData,
+      id,
+      amount: Number(expenseData.amount),
+      date: expenseData.date || new Date().toISOString(),
+    };
+
+    this.otherExpenses.unshift(newExpense);
+    this.logActivity('system', `Added ${newExpense.category} expense of ₹${newExpense.amount.toLocaleString('en-IN')}`);
+    return newExpense;
+  }
+
+  updateOtherExpense(id: string, expenseData: Partial<OtherExpense>) {
+    const index = this.otherExpenses.findIndex(e => e.id === id);
+    if (index === -1) throw new Error('Expense record not found.');
+
+    this.otherExpenses[index] = {
+      ...this.otherExpenses[index],
+      ...expenseData,
+      amount: expenseData.amount ? Number(expenseData.amount) : this.otherExpenses[index].amount,
+    };
+    return this.otherExpenses[index];
+  }
+
+  deleteOtherExpense(id: string) {
+    const index = this.otherExpenses.findIndex(e => e.id === id);
+    if (index === -1) throw new Error('Expense record not found.');
+
+    const deleted = this.otherExpenses[index];
+    this.otherExpenses.splice(index, 1);
+    this.logActivity('system', `Deleted ${deleted.category} expense record of ₹${deleted.amount.toLocaleString('en-IN')}`);
+    return true;
   }
 
   // Helper activity log
@@ -805,7 +1491,6 @@ class InMemoryDb {
       referenceId,
     });
 
-    // Keep activities limit
     if (this.activities.length > 50) {
       this.activities.pop();
     }
@@ -814,3 +1499,4 @@ class InMemoryDb {
 
 export const db = new InMemoryDb();
 export const simulateDelay = (ms = 400) => new Promise(resolve => setTimeout(resolve, ms));
+

@@ -3,11 +3,15 @@ import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextS
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
 
+import { Ionicons } from '@expo/vector-icons';
+
 interface ButtonProps {
-  title: string;
+  title?: string;
+  children?: React.ReactNode;
   onPress: () => void;
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'small';
+  icon?: string;
   loading?: boolean;
   disabled?: boolean;
   style?: ViewStyle;
@@ -15,9 +19,11 @@ interface ButtonProps {
 
 export const Button: React.FC<ButtonProps> = ({
   title,
+  children,
   onPress,
   variant = 'primary',
   size = 'md',
+  icon,
   loading = false,
   disabled = false,
   style,
@@ -31,6 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
 
     // Size styling
     switch (size) {
+      case 'small':
       case 'sm':
         buttonStyle.paddingVertical = spacing.xs;
         buttonStyle.paddingHorizontal = spacing.sm;
@@ -105,7 +112,23 @@ export const Button: React.FC<ButtonProps> = ({
       {loading ? (
         <ActivityIndicator size="small" color={indicatorColor} />
       ) : (
-        <Text style={textStyle}>{title}</Text>
+        <>
+          {icon && (
+            <Ionicons
+              name={icon as any}
+              size={size === 'sm' || size === 'small' ? 14 : 16}
+              color={textStyle.color as string}
+              style={{ marginRight: 6 }}
+            />
+          )}
+          {title ? (
+            <Text style={textStyle}>{title}</Text>
+          ) : typeof children === 'string' ? (
+            <Text style={textStyle}>{children}</Text>
+          ) : (
+            children
+          )}
+        </>
       )}
     </TouchableOpacity>
   );

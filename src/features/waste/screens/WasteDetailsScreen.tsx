@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator } from 'react-native';
-import { useRoute, RouteProp } from '@react-navigation/native';
+import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { useWasteDetails } from '../hooks/useWaste';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -17,6 +17,7 @@ type RoutePropType = RouteProp<WasteStackParamList, 'WasteDetails'>;
 export const WasteDetailsScreen: React.FC = () => {
   const { colors } = useTheme();
   const route = useRoute<RoutePropType>();
+  const navigation = useNavigation();
   const { id } = route.params;
 
   const { data: waste, isLoading, isError, refetch } = useWasteDetails(id);
@@ -66,6 +67,7 @@ export const WasteDetailsScreen: React.FC = () => {
         <PageHeader
           title={`Waste Log Details`}
           subtitle={`Auditing stock spoilage and values lost`}
+          onBack={() => navigation.goBack()}
         />
 
         <View style={styles.contentGrid}>

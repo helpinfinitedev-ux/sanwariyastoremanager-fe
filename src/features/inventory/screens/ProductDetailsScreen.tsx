@@ -15,6 +15,8 @@ import ErrorState from '../../../shared/components/feedback/ErrorState';
 import { formatCurrency, formatNumber, formatDate } from '../../../shared/utils/formatters';
 import { getStockStatus } from '../../../shared/utils/calculations';
 import { StockMovement } from '../../../shared/mock/mockDb';
+import Button from '../../../shared/components/ui/Button';
+import StockAdjustmentModal from '../components/StockAdjustmentModal';
 import { InventoryStackParamList } from '../../../app/navigation/types';
 
 type RoutePropType = RouteProp<InventoryStackParamList, 'ProductDetails'>;
@@ -25,6 +27,7 @@ export const ProductDetailsScreen: React.FC = () => {
   const navigation = useNavigation();
   const { id } = route.params;
 
+  const [adjustModalVisible, setAdjustModalVisible] = useState(false);
   const { data: product, isLoading: prodLoading, isError: prodError, refetch: refetchProd } = useProductDetails(id);
 
   // Pagination for movements list
@@ -123,7 +126,15 @@ export const ProductDetailsScreen: React.FC = () => {
         <PageHeader
           title={`${product.name}`}
           subtitle={`Detailed SKU Stock Card, purchase costs, and tracking movements ledger`}
-        />
+          onBack={() => navigation.goBack()}
+        >
+          <Button
+            title="Adjust Stock"
+            size="sm"
+            variant="outline"
+            onPress={() => setAdjustModalVisible(true)}
+          />
+        </PageHeader>
 
         <View style={[styles.mainLayout, isDesktop && styles.rowLayout]}>
           {/* Product Profile & Metrics Card */}
@@ -220,6 +231,12 @@ export const ProductDetailsScreen: React.FC = () => {
           </Card>
         </View>
       </ScrollView>
+
+      <StockAdjustmentModal
+        visible={adjustModalVisible}
+        onClose={() => setAdjustModalVisible(false)}
+        product={product}
+      />
     </ScreenContainer>
   );
 };

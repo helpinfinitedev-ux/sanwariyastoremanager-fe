@@ -13,11 +13,13 @@ export interface PurchaseQueryParams {
 }
 
 export interface CreatePurchaseDto {
-  invoiceNo: string;
+  invoiceNo?: string;
   vendorId: string;
   orderDate: string;
-  deliveryDate: string;
+  deliveryDate?: string;
   status: 'Draft' | 'Submitted';
+  paidAmount?: number;
+  paymentMethod?: string;
   notes?: string;
   photoUrl?: string;
   items: Array<{

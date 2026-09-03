@@ -1,13 +1,14 @@
 import { create } from 'zustand';
 import { storage } from '../../../storage/mmkv';
-import { mockCredentials } from '../../../shared/mock/credentials';
 
 export interface UserSession {
   id: string;
   name: string;
-  mobileNumber: string;
-  role: 'STORE_MANAGER';
-  storeName: string;
+  mobileNumber?: string;
+  phoneNumber?: string;
+  role: 'STORE_MANAGER' | 'store_manager' | 'admin' | string;
+  storeName?: string;
+  isActive?: boolean;
 }
 
 interface AuthState {
@@ -22,7 +23,7 @@ const AUTH_USER_KEY = 'auth_session_user';
 const AUTH_TOKEN_KEY = 'auth_session_token';
 
 export const useAuthStore = create<AuthState>((set) => {
-  // Load session from MMKV
+  // Load session from MMKV/storage
   const persistedToken = storage.getString(AUTH_TOKEN_KEY) || null;
   const persistedUserStr = storage.getString(AUTH_USER_KEY);
   let persistedUser: UserSession | null = null;
@@ -31,18 +32,7 @@ export const useAuthStore = create<AuthState>((set) => {
   if (persistedUserStr) {
     try {
       persistedUser = JSON.parse(persistedUserStr);
-      if (persistedUser) {
-        // Validate active status against mock store at startup
-        const record = mockCredentials.find((c) => c.mobileNumber === persistedUser!.mobileNumber);
-        if (!record || !record.isActive) {
-          // Account was deactivated or not found, clear storage immediately
-          storage.delete(AUTH_TOKEN_KEY);
-          storage.delete(AUTH_USER_KEY);
-          persistedUser = null;
-          finalAuthenticated = false;
-        }
-      }
-    } catch (e) {
+    } catch {
       persistedUser = null;
       finalAuthenticated = false;
     }

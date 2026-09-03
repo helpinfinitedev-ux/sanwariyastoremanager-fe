@@ -1,32 +1,61 @@
 import { useMutation } from '@tanstack/react-query';
-import { loginUser, LoginResponse } from '../services/authService.mock';
-import { useAuthStore } from '../store/authStore';
+import apiClient from '../../../shared/services/apiClient';
+import { useAuthStore, UserSession } from '../store/authStore';
 import Toast from 'react-native-toast-message';
+
+interface BackendLoginResponse {
+  token: string;
+  user: {
+    id: string;
+    name: string;
+    phoneNumber: string;
+    role: string;
+    isActive: boolean;
+  };
+}
 
 export function useLogin() {
   const { setSession } = useAuthStore();
 
   return useMutation({
     mutationFn: async ({ mobileNumber, password }: { mobileNumber: string; password: string }) => {
-      const res = await loginUser(mobileNumber, password);
-      if (!res.success) {
-        if (res.errorCode === 'REVOKED') {
-          throw new Error('Access revoked. Contact your admin.');
-        } else {
-          throw new Error('Invalid mobile number or password.');
+      try {
+        const res = await apiClient.post<BackendLoginResponse>('/auth/login', {
+          phoneNumber: mobileNumber.trim(),
+          password,
+        });
+
+        if (!res || !res.token) {
+          throw new Error('Invalid response from server.');
         }
+
+        const role = String(res.user?.role || '').toLowerCase();
+        if (role !== 'store_manager' && role !== 'admin') {
+          throw new Error('Access denied: Store Manager or Admin credentials required.');
+        }
+
+        const sessionUser: UserSession = {
+          id: res.user.id,
+          name: res.user.name,
+          mobileNumber: res.user.phoneNumber,
+          phoneNumber: res.user.phoneNumber,
+          role: res.user.role,
+          storeName: 'Sanwariya Restaurant',
+          isActive: res.user.isActive,
+        };
+
+        return { token: res.token, user: sessionUser };
+      } catch (err: any) {
+        throw new Error(err.message || 'Invalid credentials or connection error.');
       }
-      return res;
     },
     onSuccess: (data) => {
-      if (data.success) {
-        setSession(data.user, data.token);
-        Toast.show({
-          type: 'success',
-          text1: 'Authentication Successful',
-          text2: `Welcome back, ${data.user.name}!`,
-        });
-      }
+      setSession(data.user, data.token);
+      Toast.show({
+        type: 'success',
+        text1: 'Authentication Successful',
+        text2: `Welcome back, ${data.user.name}!`,
+      });
     },
     onError: (error: any) => {
       Toast.show({

@@ -160,6 +160,26 @@ export const DashboardScreen: React.FC = () => {
                 onPress={() => navigation.navigate(ROUTES.MAIN.WASTE)}
               />
             </View>
+
+            <View style={[styles.gridItem, { width: itemWidth }]}>
+              <KpiCard
+                title="Total Expenses"
+                value={formatCurrency(kpis?.totalExpenses || 0)}
+                iconName="wallet-outline"
+                iconColor={colors.warning}
+                onPress={() => navigation.navigate(ROUTES.MAIN.EXPENSES)}
+              />
+            </View>
+
+            <View style={[styles.gridItem, { width: itemWidth }]}>
+              <KpiCard
+                title="Vendor Outstanding"
+                value={formatCurrency(kpis?.vendorOutstanding || 0)}
+                iconName="cash-outline"
+                iconColor={colors.danger}
+                onPress={() => navigation.navigate(ROUTES.MAIN.VENDORS)}
+              />
+            </View>
           </View>
         </View>
 

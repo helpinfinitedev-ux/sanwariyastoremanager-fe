@@ -11,6 +11,8 @@ export const ROUTES = {
     KITCHEN_ISSUE: 'KitchenIssueStack',
     WASTE: 'WasteStack',
     STOCK_MOVEMENT: 'StockMovementStack',
+    VENDORS: 'VendorsStack',
+    EXPENSES: 'ExpensesStack',
     REPORTS: 'ReportsStack',
     PROFILE: 'ProfileStack',
   },
@@ -19,6 +21,13 @@ export const ROUTES = {
     DETAILS: 'PurchaseDetails',
     CREATE: 'CreatePurchase',
     EDIT: 'EditPurchase',
+  },
+  VENDORS_SCREENS: {
+    LIST: 'VendorList',
+    DETAILS: 'VendorDetails',
+  },
+  EXPENSES_SCREENS: {
+    MAIN: 'ExpensesMain',
   },
   INVENTORY_SCREENS: {
     LIST: 'InventoryList',
@@ -44,6 +53,8 @@ export const ROUTES = {
     KITCHEN_ISSUE: 'KitchenIssueReport',
     WASTE: 'WasteReport',
     STOCK_MOVEMENT: 'StockMovementReport',
+    EXPENSE: 'ExpenseReport',
+    VENDORS: 'VendorPayablesReport',
   },
   PROFILE_SCREENS: {
     DETAILS: 'ProfileDetails',

@@ -1,7 +1,7 @@
 import { storage } from "../../storage/mmkv";
 
 const DEFAULT_BASE_URL =
-  process.env.VITE_API_URL || "http://localhost:4000/api";
+  process.env.VITE_PUBLIC_API_URL || "http://localhost:4000/api";
 
 export interface ApiErrorResponse {
   success: boolean;

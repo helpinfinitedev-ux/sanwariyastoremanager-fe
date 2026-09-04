@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, ViewStyle, TextInput, Platform } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
@@ -37,6 +37,73 @@ export const CreatableSelect: React.FC<CreatableSelectProps> = ({
   const { colors } = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+
+  const [position, setPosition] = useState<{
+    top?: number;
+    bottom?: number;
+    left: number;
+    width: number;
+    openAbove: boolean;
+    maxHeight: number;
+  }>({ left: 0, width: 300, openAbove: false, maxHeight: 350 });
+
+  const updatePosition = useCallback(() => {
+    if (!triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
+
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    const popupHeight = 350;
+    const openAbove = spaceBelow < popupHeight && spaceAbove > spaceBelow;
+
+    const availableSpace = openAbove ? spaceAbove - 16 : spaceBelow - 16;
+    const maxHeight = Math.max(160, Math.min(400, availableSpace));
+
+    let left = rect.left;
+    let width = rect.width;
+
+    if (left + width > viewportWidth - 16) {
+      width = Math.min(width, viewportWidth - 32);
+      left = Math.max(16, viewportWidth - width - 16);
+    }
+    if (left < 16) {
+      left = 16;
+    }
+
+    setPosition({
+      top: openAbove ? undefined : rect.bottom + 4,
+      bottom: openAbove ? viewportHeight - rect.top + 4 : undefined,
+      left,
+      width,
+      openAbove,
+      maxHeight,
+    });
+  }, []);
+
+  useEffect(() => {
+    if (modalVisible) {
+      updatePosition();
+      const handleScrollOrResize = () => {
+        updatePosition();
+      };
+      window.addEventListener('scroll', handleScrollOrResize, true);
+      window.addEventListener('resize', handleScrollOrResize);
+      return () => {
+        window.removeEventListener('scroll', handleScrollOrResize, true);
+        window.removeEventListener('resize', handleScrollOrResize);
+      };
+    }
+  }, [modalVisible, updatePosition]);
+
+  const handleOpen = () => {
+    if (disabled) return;
+    updatePosition();
+    setModalVisible(true);
+  };
 
   const selectedOption = options.find((o) => o.value === selectedValue);
 
@@ -59,8 +126,9 @@ export const CreatableSelect: React.FC<CreatableSelectProps> = ({
       )}
       
       <TouchableOpacity
+        ref={triggerRef as any}
         activeOpacity={0.7}
-        onPress={() => !disabled && setModalVisible(true)}
+        onPress={handleOpen}
         disabled={disabled}
         style={[
           styles.selector,
@@ -97,20 +165,27 @@ export const CreatableSelect: React.FC<CreatableSelectProps> = ({
           setSearchText('');
         }}
       >
-        <TouchableOpacity
+        <View
           style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => {
+          onClick={() => {
             setModalVisible(false);
             setSearchText('');
           }}
         >
-          <TouchableOpacity
-            activeOpacity={1}
+          <View
             style={[
               styles.modalContent,
-              { backgroundColor: colors.surface, borderColor: colors.border },
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                left: position.left,
+                width: position.width,
+                top: position.top,
+                bottom: position.bottom,
+                maxHeight: position.maxHeight,
+              },
             ]}
+            onClick={(e: any) => e.stopPropagation()}
           >
             <View style={[styles.modalHeader, { borderBottomColor: colors.divider }]}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
@@ -216,8 +291,8 @@ export const CreatableSelect: React.FC<CreatableSelectProps> = ({
                 {createLabel}
               </Text>
             </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
     </View>
   );
@@ -251,24 +326,25 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: spacing.xl,
+    position: 'fixed' as any,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9998,
+    backgroundColor: 'transparent',
   },
   modalContent: {
-    width: '100%',
-    maxWidth: 450,
-    maxHeight: 450,
+    position: 'fixed' as any,
+    zIndex: 9999,
     borderRadius: 8,
     borderWidth: 1,
     overflow: 'hidden',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -305,7 +381,7 @@ const styles = StyleSheet.create({
   },
   optionsList: {
     flexGrow: 0,
-    maxHeight: 280,
+    flexShrink: 1,
   },
   optionItem: {
     flexDirection: 'row',
@@ -352,3 +428,4 @@ const styles = StyleSheet.create({
 });
 
 export default CreatableSelect;
+

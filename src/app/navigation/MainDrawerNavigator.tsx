@@ -76,7 +76,7 @@ const AppShell = ({ drawerOpen, closeDrawer }: { drawerOpen: boolean; closeDrawe
           </aside>
         </div>
       )}
-      <main style={{ minWidth: 0, flex: 1, height: '100%', overflow: 'hidden' }}>
+      <main style={{ minWidth: 0, flex: 1, height: '100%', overflowY: 'auto' }}>
         <Screen />
       </main>
     </div>

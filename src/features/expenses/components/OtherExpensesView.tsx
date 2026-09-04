@@ -42,32 +42,49 @@ export const OtherExpensesView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<OtherExpense | null>(null);
 
+  // Date normalization helper (YYYY-MM-DD)
+  const normalizeDate = (d?: string) => {
+    if (!d) return '';
+    if (d.includes('T')) return d.split('T')[0];
+    if (d.includes(' ')) return d.split(' ')[0];
+    return d;
+  };
+
+  const isInvalidDateRange = useMemo(() => {
+    if (fromDate && toDate) {
+      return normalizeDate(fromDate) > normalizeDate(toDate);
+    }
+    return false;
+  }, [fromDate, toDate]);
+
   // Filtered List
   const filteredExpenses = useMemo(() => {
+    if (isInvalidDateRange) return [];
+
+    const fromStr = fromDate ? normalizeDate(fromDate) : '';
+    const toStr = toDate ? normalizeDate(toDate) : '';
+
     return (expenses || []).filter(item => {
       // Category
       if (categoryFilter !== 'ALL' && item.category !== categoryFilter) {
         return false;
       }
 
-      // Date Range
-      if (fromDate) {
-        const itemDate = dayjs(item.date);
-        if (itemDate.isBefore(dayjs(fromDate).startOf('day'))) return false;
-      }
-      if (toDate) {
-        const itemDate = dayjs(item.date);
-        if (itemDate.isAfter(dayjs(toDate).endOf('day'))) return false;
-      }
+      const itemDateStr = normalizeDate(item.date);
+
+      // Date Range (Inclusive >= and <=)
+      if (fromStr && itemDateStr < fromStr) return false;
+      if (toStr && itemDateStr > toStr) return false;
 
       return true;
     });
-  }, [expenses, categoryFilter, fromDate, toDate]);
+  }, [expenses, categoryFilter, fromDate, toDate, isInvalidDateRange]);
 
   // Total of filtered expenses
   const totalAmount = useMemo(() => {
+    if (isInvalidDateRange) return 0;
     return filteredExpenses.reduce((sum, item) => sum + item.amount, 0);
-  }, [filteredExpenses]);
+  }, [filteredExpenses, isInvalidDateRange]);
 
   const handleOpenAdd = () => {
     setEditingExpense(null);
@@ -172,6 +189,16 @@ export const OtherExpensesView: React.FC = () => {
           </View>
         </View>
       </Card>
+
+      {/* Date Validation Warning Banner */}
+      {isInvalidDateRange && (
+        <View style={[styles.infoBanner, { backgroundColor: colors.dangerBg, borderColor: colors.danger + '30' }]}>
+          <Ionicons name="alert-circle-outline" size={16} color={colors.danger} />
+          <Text style={[styles.infoBannerText, { color: colors.danger }]}>
+            Date From cannot be later than Date To. Please adjust your date range filter.
+          </Text>
+        </View>
+      )}
 
       {/* Expense List */}
       <FlatList
@@ -292,6 +319,21 @@ const styles = StyleSheet.create({
   filterCol: {
     flex: 1,
     minWidth: 140,
+  },
+  infoBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: 6,
+    borderWidth: 1,
+    marginBottom: spacing.md,
+  },
+  infoBannerText: {
+    fontSize: 12,
+    fontWeight: '500',
+    flex: 1,
   },
   listContent: {
     gap: spacing.sm,

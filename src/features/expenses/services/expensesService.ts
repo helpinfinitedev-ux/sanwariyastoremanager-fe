@@ -1,4 +1,5 @@
 import apiClient from '../../../shared/services/apiClient';
+import purchaseService from '../../purchase/services/purchaseService';
 import { OtherExpense, OtherExpenseFormInputs, IngredientExpenseRecord } from '../types/expenses.types';
 
 export interface BackendExpense {
@@ -27,37 +28,61 @@ function mapBackendExpense(e: BackendExpense): OtherExpense {
 
 export const expensesService = {
   getOtherExpenses: async (): Promise<OtherExpense[]> => {
-    const res = await apiClient.get<{ expenses: BackendExpense[] }>('/store/expenses', { limit: 1000 });
-    const list = res.expenses || (res as any) || [];
+    const res = await apiClient.get<any>('/store/expenses', { limit: 1000 });
+    const list: BackendExpense[] = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res?.expenses)
+      ? res.expenses
+      : Array.isArray(res)
+      ? res
+      : [];
     return list.map(mapBackendExpense);
   },
 
   getIngredientExpenses: async (): Promise<IngredientExpenseRecord[]> => {
-    const res = await apiClient.get<{ purchases: any[] }>('/store/purchases', {
-      status: 'Submitted',
-      limit: 1000,
-    });
-    const purchases = res.purchases || [];
+    const firstPage = await purchaseService.getPurchases({ page: 1, pageSize: 1000 });
+    let purchases = firstPage.data || [];
+
+    if (firstPage.totalPages > 1) {
+      const remainingPagesPromises = [];
+      for (let p = 2; p <= firstPage.totalPages; p++) {
+        remainingPagesPromises.push(purchaseService.getPurchases({ page: p, pageSize: 1000 }));
+      }
+      const remainingResults = await Promise.all(remainingPagesPromises);
+      remainingResults.forEach((res) => {
+        if (res.data) {
+          purchases = purchases.concat(res.data);
+        }
+      });
+    }
+
     const records: IngredientExpenseRecord[] = [];
 
     purchases.forEach((p) => {
       const items = p.items || [];
-      items.forEach((it: any, idx: number) => {
+      const pTotal = p.totalAmount || 0;
+      const pPaid = p.paidAmount || 0;
+
+      items.forEach((it, idx) => {
+        const itemSubtotal = it.subtotal || (it.quantity || 0) * (it.unitCost || 0);
+        const itemPaid = pTotal > 0 ? (itemSubtotal / pTotal) * pPaid : 0;
+        const itemDue = Math.max(0, itemSubtotal - itemPaid);
+
         records.push({
-          id: `${p._id || p.id}_${idx}`,
-          purchaseId: p._id || p.id,
-          invoiceNo: p.invoiceNumber || p.purchaseNumber || 'Invoice',
-          vendorId: p.vendor?._id || p.vendor?.id || String(p.vendor),
-          vendorName: p.vendor?.name || 'Vendor',
-          orderDate: p.invoiceDate || p.createdAt || new Date().toISOString(),
-          ingredientName: it.ingredient?.name || 'Ingredient',
+          id: `${p.id}_${idx}`,
+          purchaseId: p.id,
+          invoiceNo: p.invoiceNo || 'Invoice',
+          vendorId: p.vendorId,
+          vendorName: p.vendorName || 'Vendor',
+          orderDate: p.orderDate || new Date().toISOString(),
+          ingredientName: it.productName || 'Ingredient',
           quantity: it.quantity || 0,
-          unit: it.unit || it.ingredient?.unit || 'unit',
+          unit: 'unit',
           unitCost: it.unitCost || 0,
-          totalAmount: it.totalCost || (it.quantity || 0) * (it.unitCost || 0),
-          paidAmount: p.paidAmount || 0,
-          dueAmount: p.dueAmount || 0,
-          paymentStatus: (p.paymentStatus as any) || 'PAID',
+          totalAmount: itemSubtotal,
+          paidAmount: Math.round(itemPaid * 100) / 100,
+          dueAmount: Math.round(itemDue * 100) / 100,
+          paymentStatus: p.paymentStatus || 'PAID',
         });
       });
     });

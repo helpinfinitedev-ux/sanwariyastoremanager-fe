@@ -28,13 +28,11 @@ export const Modal: React.FC<ModalProps> = ({
       animationType="fade"
       onRequestClose={onClose}
     >
-      <TouchableOpacity
+      <View
         style={styles.overlay}
-        activeOpacity={1}
-        onPress={onClose}
+        onClick={onClose}
       >
-        <TouchableOpacity
-          activeOpacity={1}
+        <View
           style={[
             styles.content,
             {
@@ -43,6 +41,7 @@ export const Modal: React.FC<ModalProps> = ({
             },
             containerStyle,
           ]}
+          onClick={(e: any) => e.stopPropagation()}
         >
           <View style={[styles.header, { borderBottomColor: colors.divider }]}>
             <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
@@ -51,15 +50,22 @@ export const Modal: React.FC<ModalProps> = ({
             </TouchableOpacity>
           </View>
           <View style={styles.body}>{children}</View>
-        </TouchableOpacity>
-      </TouchableOpacity>
+        </View>
+      </View>
     </RNModal>
   );
 };
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: 'fixed' as any,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100vw' as any,
+    height: '100vh' as any,
+    zIndex: 10000,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -68,13 +74,14 @@ const styles = StyleSheet.create({
   content: {
     width: '100%',
     maxWidth: 500,
+    maxHeight: '90vh' as any,
     borderRadius: 8,
     borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 8,
     overflow: 'hidden',
   },
   header: {
@@ -93,6 +100,9 @@ const styles = StyleSheet.create({
   },
   body: {
     padding: spacing.lg,
+    maxHeight: 'calc(90vh - 60px)' as any,
+    overflowY: 'auto' as any,
+    flexShrink: 1,
   },
 });
 

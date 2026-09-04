@@ -17,8 +17,6 @@ interface OtherExpenseFormModalProps {
   loading?: boolean;
 }
 
-
-
 const PAYMENT_METHODS = [
   { label: 'Cash', value: 'Cash' },
   { label: 'UPI', value: 'UPI' },
@@ -66,7 +64,9 @@ export const OtherExpenseFormModal: React.FC<OtherExpenseFormModalProps> = ({
   const handleSave = async () => {
     let hasError = false;
 
-    if (!category.trim()) {
+    const finalCategory = category.trim();
+
+    if (!finalCategory) {
       setCategoryError('Expense category is required.');
       hasError = true;
     } else {
@@ -85,7 +85,7 @@ export const OtherExpenseFormModal: React.FC<OtherExpenseFormModalProps> = ({
 
     try {
       await onSubmit({
-        category: category.trim(),
+        category: finalCategory,
         amount: numAmount,
         date: new Date(date).toISOString(),
         paymentMethod,

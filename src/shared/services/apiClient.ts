@@ -31,8 +31,8 @@ function getAuthToken(): string | null {
 }
 
 function getBaseUrl(): string {
-  if (typeof process !== "undefined" && process.env?.EXPO_PUBLIC_API_URL) {
-    return process.env.EXPO_PUBLIC_API_URL.replace(/\/+$/, "");
+  if (typeof process !== "undefined" && process.env?.VITE_PUBLIC_API_URL) {
+    return process.env.VITE_PUBLIC_API_URL.replace(/\/+$/, "");
   }
   return DEFAULT_BASE_URL;
 }

@@ -5,7 +5,7 @@ import Toast from '@/web/toast';
 
 export const EXPENSE_QUERY_KEYS = {
   other: ['expenses', 'other'] as const,
-  ingredient: ['expenses', 'ingredient'] as const,
+  ingredient: ['purchases'] as const,
 };
 
 export const useOtherExpenses = () => {

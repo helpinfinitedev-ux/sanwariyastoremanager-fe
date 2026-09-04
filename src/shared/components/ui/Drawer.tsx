@@ -71,17 +71,27 @@ export const Drawer: React.FC<DrawerProps> = ({
 
 const styles = StyleSheet.create({
   overlay: {
-    flex: 1,
+    position: 'fixed' as any,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100vw' as any,
+    height: '100vh' as any,
+    zIndex: 10000,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
   backdrop: {
-    ...StyleSheet.absoluteFill,
+    ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
   drawerContent: {
     height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+    minHeight: 0,
     zIndex: 2,
     borderLeftWidth: 1,
     shadowColor: '#000',

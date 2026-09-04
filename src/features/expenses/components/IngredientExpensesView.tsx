@@ -28,35 +28,63 @@ export const IngredientExpensesView: React.FC = () => {
   // Extract unique ingredients list
   const ingredientOptions = useMemo(() => {
     const list = new Set<string>();
-    (records || []).forEach(r => list.add(r.ingredientName));
+    (records || []).forEach(r => {
+      if (r.ingredientName) list.add(r.ingredientName);
+    });
     const opts = Array.from(list).sort().map(name => ({ label: name, value: name }));
     return [{ label: 'All Ingredients', value: 'ALL' }, ...opts];
   }, [records]);
 
+  // Date normalization helper (YYYY-MM-DD)
+  const normalizeDate = (d?: string) => {
+    if (!d) return '';
+    if (d.includes('T')) return d.split('T')[0];
+    if (d.includes(' ')) return d.split(' ')[0];
+    return d;
+  };
+
+  const isInvalidDateRange = useMemo(() => {
+    if (fromDate && toDate) {
+      return normalizeDate(fromDate) > normalizeDate(toDate);
+    }
+    return false;
+  }, [fromDate, toDate]);
+
   // Filter records
   const filteredRecords = useMemo(() => {
+    if (isInvalidDateRange) return [];
+
+    const fromStr = fromDate ? normalizeDate(fromDate) : '';
+    const toStr = toDate ? normalizeDate(toDate) : '';
+
     return (records || []).filter(item => {
       // Ingredient filter
       if (selectedIngredient !== 'ALL' && item.ingredientName !== selectedIngredient) {
         return false;
       }
 
-      // Date range filter
-      if (fromDate) {
-        const itemDate = dayjs(item.orderDate);
-        if (itemDate.isBefore(dayjs(fromDate).startOf('day'))) return false;
+      const itemDateStr = normalizeDate(item.orderDate);
+
+      // Date From filter (inclusive >=)
+      if (fromStr && itemDateStr < fromStr) {
+        return false;
       }
-      if (toDate) {
-        const itemDate = dayjs(item.orderDate);
-        if (itemDate.isAfter(dayjs(toDate).endOf('day'))) return false;
+
+      // Date To filter (inclusive <=)
+      if (toStr && itemDateStr > toStr) {
+        return false;
       }
 
       return true;
     });
-  }, [records, selectedIngredient, fromDate, toDate]);
+  }, [records, selectedIngredient, fromDate, toDate, isInvalidDateRange]);
 
   // Compute summary from filtered records
   const summary = useMemo(() => {
+    if (isInvalidDateRange) {
+      return { totalPurchase: 0, totalPaid: 0, totalDue: 0 };
+    }
+
     let totalPurchase = 0;
     let totalPaid = 0;
     let totalDue = 0;
@@ -67,8 +95,12 @@ export const IngredientExpensesView: React.FC = () => {
       totalDue += r.dueAmount;
     });
 
-    return { totalPurchase, totalPaid, totalDue };
-  }, [filteredRecords]);
+    return {
+      totalPurchase: Math.round(totalPurchase * 100) / 100,
+      totalPaid: Math.round(totalPaid * 100) / 100,
+      totalDue: Math.round(totalDue * 100) / 100,
+    };
+  }, [filteredRecords, isInvalidDateRange]);
 
   const handleResetFilters = () => {
     setFromDate('');
@@ -88,8 +120,8 @@ export const IngredientExpensesView: React.FC = () => {
     }
   };
 
-  if (isLoading) return <LoadingSpinner message="Loading ingredient purchases..." />;
-  if (isError) return <ErrorState message="Failed to load ingredient purchases." onRetry={refetch} />;
+  if (isLoading) return <LoadingSpinner message="Loading ingredient purchases from Purchase Management..." />;
+  if (isError) return <ErrorState message="Failed to load purchase management data." onRetry={refetch} />;
 
   return (
     <View style={styles.container}>
@@ -167,13 +199,23 @@ export const IngredientExpensesView: React.FC = () => {
         </View>
       </Card>
 
-      {/* Info banner: no add button here */}
-      <View style={[styles.infoBanner, { backgroundColor: colors.infoBg, borderColor: colors.info + '30' }]}>
-        <Ionicons name="information-circle-outline" size={16} color={colors.info} />
-        <Text style={[styles.infoBannerText, { color: colors.info }]}>
-          Ingredient purchases are managed from Purchase Management. This is a read-only view.
-        </Text>
-      </View>
+      {/* Date Validation Warning Banner */}
+      {isInvalidDateRange ? (
+        <View style={[styles.infoBanner, { backgroundColor: colors.dangerBg, borderColor: colors.danger + '30' }]}>
+          <Ionicons name="alert-circle-outline" size={16} color={colors.danger} />
+          <Text style={[styles.infoBannerText, { color: colors.danger }]}>
+            Date From cannot be later than Date To. Please adjust your date range filter.
+          </Text>
+        </View>
+      ) : (
+        /* Info banner: no add button here */
+        <View style={[styles.infoBanner, { backgroundColor: colors.infoBg, borderColor: colors.info + '30' }]}>
+          <Ionicons name="information-circle-outline" size={16} color={colors.info} />
+          <Text style={[styles.infoBannerText, { color: colors.info }]}>
+            Ingredient purchases are managed from Purchase Management. This is a read-only view.
+          </Text>
+        </View>
+      )}
 
       {/* Records List */}
       <FlatList

@@ -195,7 +195,7 @@ export const PurchaseForm: React.FC<PurchaseFormProps> = ({
                     setTypedSupplierName(txt);
                     setSupplierModalVisible(true);
                   }}
-                  createLabel="+ Add New Supplier"
+                  createLabel="+ Add Vendor / Supplier"
                   error={errors.vendorId?.message}
                 />
               )}

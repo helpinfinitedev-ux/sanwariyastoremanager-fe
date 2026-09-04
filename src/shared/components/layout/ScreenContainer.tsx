@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, ScrollView, ViewStyle, useWindowDimensions } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
+import { spacing } from '../../theme/themes';
 import TopBar from './TopBar';
 import { useNavigation } from '@/web/navigation';
 
@@ -48,15 +49,21 @@ const styles = StyleSheet.create({
   outer: {
     flex: 1,
     height: '100%',
+    minHeight: 0,
   },
   container: {
     flex: 1,
+    minHeight: 0,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingBottom: spacing.xl,
   },
   content: {
     flex: 1,
+    minHeight: 0,
+    overflowY: 'auto' as any,
+    paddingBottom: spacing.xl,
   },
 });
 

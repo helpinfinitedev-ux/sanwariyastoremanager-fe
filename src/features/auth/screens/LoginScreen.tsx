@@ -186,37 +186,6 @@ export const LoginScreen: React.FC = () => {
               loading={loginMutation.isPending}
               style={styles.submitBtn}
             />
-
-            <View style={[styles.helpBox, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}>
-              <Text style={[styles.helpTitle, { color: colors.text }]}>Quick Demo Log In (Tap to autofill):</Text>
-              <View style={styles.quickFillContainer}>
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={[styles.quickFillBtn, { backgroundColor: colors.surface, borderColor: colors.primary }]}
-                  onPress={() => handleQuickFill('1234567890', 'password123')}
-                >
-                  <Ionicons name="storefront-outline" size={18} color={colors.primary} />
-                  <View style={styles.quickFillContent}>
-                    <Text style={[styles.quickFillRole, { color: colors.primary }]}>Main Branch Manager</Text>
-                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>1234567890 / password123</Text>
-                  </View>
-                  <Ionicons name="arrow-forward-circle" size={18} color={colors.primary} />
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  activeOpacity={0.7}
-                  style={[styles.quickFillBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => handleQuickFill('8888888888', 'password123')}
-                >
-                  <Ionicons name="shield-checkmark-outline" size={18} color={colors.textSecondary} />
-                  <View style={styles.quickFillContent}>
-                    <Text style={[styles.quickFillRole, { color: colors.text }]}>Highway Outlet Manager</Text>
-                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>8888888888 / password123</Text>
-                  </View>
-                  <Ionicons name="arrow-forward-circle-outline" size={18} color={colors.textSecondary} />
-                </TouchableOpacity>
-              </View>
-            </View>
           </Card>
         </View>
       </ScrollView>

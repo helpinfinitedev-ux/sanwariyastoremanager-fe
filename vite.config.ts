@@ -4,6 +4,8 @@ import path from 'node:path';
 
 export default defineConfig({
   plugins: [react()],
+  // Keep EXPO_PUBLIC_* available during the migration while VITE_* is canonical.
+  envPrefix: ['VITE_', 'EXPO_PUBLIC_'],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

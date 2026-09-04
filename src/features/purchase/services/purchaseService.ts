@@ -53,6 +53,18 @@ function mapBackendPurchase(p: BackendPurchase): Purchase {
   const paidAmount = p.paidAmount || 0;
   const dueAmount = p.dueAmount !== undefined ? p.dueAmount : Math.max(0, totalAmount - paidAmount);
 
+  const paymentStatus = p.paymentStatus
+    ? p.paymentStatus === 'PAID'
+      ? 'PAID'
+      : p.paymentStatus === 'PARTIAL'
+      ? 'PARTIAL'
+      : 'CREDIT'
+    : paidAmount >= totalAmount && totalAmount > 0
+    ? 'PAID'
+    : paidAmount > 0
+    ? 'PARTIAL'
+    : 'CREDIT';
+
   return {
     id: p._id || p.id || '',
     invoiceNo: p.invoiceNumber || p.purchaseNumber,
@@ -64,7 +76,7 @@ function mapBackendPurchase(p: BackendPurchase): Purchase {
     totalAmount,
     paidAmount,
     dueAmount,
-    paymentStatus: p.paymentStatus === 'PAID' ? 'PAID' : p.paymentStatus === 'PARTIAL' ? 'PARTIAL' : 'CREDIT',
+    paymentStatus,
     paymentMethod: 'Cash',
     status: p.status === 'Cancelled' ? 'Draft' : (p.status as any),
     notes: p.notes || '',
@@ -84,16 +96,29 @@ export const purchaseService = {
     if (params.startDate) query.startDate = params.startDate;
     if (params.endDate) query.endDate = params.endDate;
 
-    const res = await apiClient.get<{
-      purchases: BackendPurchase[];
-      pagination: { total: number; page: number; limit: number; pages: number };
-    }>('/store/purchases', query);
+    const res: any = await apiClient.get('/store/purchases', query);
 
-    const items = (res.purchases || []).map(mapBackendPurchase);
-    const total = res.pagination?.total ?? items.length;
-    const pageSize = res.pagination?.limit || 10;
-    const page = res.pagination?.page || 1;
-    const totalPages = res.pagination?.pages || Math.ceil(total / pageSize) || 1;
+    const rawList: BackendPurchase[] = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res?.purchases)
+      ? res.purchases
+      : Array.isArray(res)
+      ? res
+      : [];
+
+    const items = rawList.map(mapBackendPurchase);
+    const total = Array.isArray(res)
+      ? items.length
+      : res?.totalCount ?? res?.pagination?.total ?? items.length;
+    const pageSize = Array.isArray(res)
+      ? 10
+      : res?.pageSize ?? res?.pagination?.limit ?? 10;
+    const page = Array.isArray(res)
+      ? 1
+      : res?.page ?? res?.pagination?.page ?? 1;
+    const totalPages = Array.isArray(res)
+      ? 1
+      : res?.totalPages ?? res?.pagination?.pages ?? (Math.ceil(total / pageSize) || 1);
 
     return {
       data: items,
@@ -105,8 +130,8 @@ export const purchaseService = {
   },
 
   getPurchaseById: async (id: string): Promise<Purchase> => {
-    const res = await apiClient.get<{ purchase: BackendPurchase }>(`/store/purchases/${id}`);
-    const p = res.purchase || (res as any);
+    const res: any = await apiClient.get(`/store/purchases/${id}`);
+    const p = res?.purchase || res;
     return mapBackendPurchase(p);
   },
 
@@ -116,6 +141,8 @@ export const purchaseService = {
       invoiceNumber: dto.invoiceNo || `INV-${Date.now().toString().slice(-6)}`,
       invoiceDate: dto.orderDate,
       status: dto.status,
+      paidAmount: dto.paidAmount !== undefined ? Number(dto.paidAmount) : 0,
+      paymentMethod: dto.paymentMethod || 'Cash',
       items: dto.items.map((it) => ({
         ingredient: it.productId,
         quantity: it.quantity,
@@ -124,8 +151,8 @@ export const purchaseService = {
       notes: dto.notes || undefined,
     };
 
-    const res = await apiClient.post<{ purchase: BackendPurchase }>('/store/purchases', payload);
-    const p = res.purchase || (res as any);
+    const res: any = await apiClient.post('/store/purchases', payload);
+    const p = res?.purchase || res;
     return mapBackendPurchase(p);
   },
 
@@ -135,6 +162,8 @@ export const purchaseService = {
     if (dto.invoiceNo) payload.invoiceNumber = dto.invoiceNo;
     if (dto.orderDate) payload.invoiceDate = dto.orderDate;
     if (dto.status) payload.status = dto.status;
+    if (dto.paidAmount !== undefined) payload.paidAmount = Number(dto.paidAmount);
+    if (dto.paymentMethod) payload.paymentMethod = dto.paymentMethod;
     if (dto.notes !== undefined) payload.notes = dto.notes;
     if (dto.items) {
       payload.items = dto.items.map((it) => ({
@@ -144,20 +173,20 @@ export const purchaseService = {
       }));
     }
 
-    const res = await apiClient.patch<{ purchase: BackendPurchase }>(`/store/purchases/${id}`, payload);
-    const p = res.purchase || (res as any);
+    const res: any = await apiClient.patch(`/store/purchases/${id}`, payload);
+    const p = res?.purchase || res;
     return mapBackendPurchase(p);
   },
 
   submitPurchase: async (id: string): Promise<Purchase> => {
-    const res = await apiClient.post<{ purchase: BackendPurchase }>(`/store/purchases/${id}/submit`);
-    const p = res.purchase || (res as any);
+    const res: any = await apiClient.post(`/store/purchases/${id}/submit`);
+    const p = res?.purchase || res;
     return mapBackendPurchase(p);
   },
 
   cancelPurchase: async (id: string): Promise<Purchase> => {
-    const res = await apiClient.post<{ purchase: BackendPurchase }>(`/store/purchases/${id}/cancel`);
-    const p = res.purchase || (res as any);
+    const res: any = await apiClient.post(`/store/purchases/${id}/cancel`);
+    const p = res?.purchase || res;
     return mapBackendPurchase(p);
   },
 

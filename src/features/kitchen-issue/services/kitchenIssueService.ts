@@ -58,16 +58,29 @@ export const kitchenIssueService = {
     if (params.startDate) query.startDate = params.startDate;
     if (params.endDate) query.endDate = params.endDate;
 
-    const res = await apiClient.get<{
-      kitchenIssues: BackendKitchenIssue[];
-      pagination: { total: number; page: number; limit: number; pages: number };
-    }>('/store/kitchen-issues', query);
+    const res: any = await apiClient.get('/store/kitchen-issues', query);
 
-    const items = (res.kitchenIssues || []).map(mapBackendIssue);
-    const total = res.pagination?.total ?? items.length;
-    const pageSize = res.pagination?.limit || 10;
-    const page = res.pagination?.page || 1;
-    const totalPages = res.pagination?.pages || Math.ceil(total / pageSize) || 1;
+    const rawList: BackendKitchenIssue[] = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res?.kitchenIssues)
+      ? res.kitchenIssues
+      : Array.isArray(res)
+      ? res
+      : [];
+
+    const items = rawList.map(mapBackendIssue);
+    const total = Array.isArray(res)
+      ? items.length
+      : res?.totalCount ?? res?.pagination?.total ?? items.length;
+    const pageSize = Array.isArray(res)
+      ? 10
+      : res?.pageSize ?? res?.pagination?.limit ?? 10;
+    const page = Array.isArray(res)
+      ? 1
+      : res?.page ?? res?.pagination?.page ?? 1;
+    const totalPages = Array.isArray(res)
+      ? 1
+      : res?.totalPages ?? res?.pagination?.pages ?? (Math.ceil(total / pageSize) || 1);
 
     return {
       data: items,
@@ -79,8 +92,8 @@ export const kitchenIssueService = {
   },
 
   getIssueById: async (id: string): Promise<KitchenIssue> => {
-    const res = await apiClient.get<{ kitchenIssue: BackendKitchenIssue }>(`/store/kitchen-issues/${id}`);
-    const iss = res.kitchenIssue || (res as any);
+    const res: any = await apiClient.get(`/store/kitchen-issues/${id}`);
+    const iss = res?.kitchenIssue || res;
     return mapBackendIssue(iss);
   },
 
@@ -95,8 +108,8 @@ export const kitchenIssueService = {
       })),
     };
 
-    const res = await apiClient.post<{ kitchenIssue: BackendKitchenIssue }>('/store/kitchen-issues', payload);
-    const iss = res.kitchenIssue || (res as any);
+    const res: any = await apiClient.post('/store/kitchen-issues', payload);
+    const iss = res?.kitchenIssue || res;
     return mapBackendIssue(iss);
   },
 

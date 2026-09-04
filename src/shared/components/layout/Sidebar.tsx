@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { DrawerContentComponentProps } from '@react-navigation/drawer';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { useAuthStore } from '../../../features/auth/store/authStore';
+import { useLogout } from '../../../features/auth/hooks/useAuth';
+import ConfirmDialog from '../feedback/ConfirmDialog';
 import { spacing, typography } from '../../theme/themes';
 import { Ionicons } from '@expo/vector-icons';
 import { ROUTES } from '../../constants/routes';
@@ -16,6 +18,8 @@ interface SidebarItem {
 export const Sidebar: React.FC<DrawerContentComponentProps> = ({ navigation, state }) => {
   const { colors, theme } = useTheme();
   const { user } = useAuthStore();
+  const logout = useLogout();
+  const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
 
   const menuItems: SidebarItem[] = [
     { name: 'Dashboard', route: ROUTES.MAIN.DASHBOARD, icon: 'grid-outline' },
@@ -82,9 +86,21 @@ export const Sidebar: React.FC<DrawerContentComponentProps> = ({ navigation, sta
             </TouchableOpacity>
           );
         })}
+
+        {/* Dedicated Sign Out Navigation Item */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setLogoutConfirmVisible(true)}
+          style={[styles.menuItem, { marginTop: spacing.sm }]}
+        >
+          <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+          <Text style={[styles.menuItemText, { color: colors.danger, fontWeight: '600' }]}>
+            Sign Out
+          </Text>
+        </TouchableOpacity>
       </ScrollView>
 
-      {/* Footer Info */}
+      {/* Footer Info with Quick Sign Out Action */}
       {user && (
         <View style={[styles.footer, { borderTopColor: colors.divider }]}>
           <View style={styles.userInfo}>
@@ -101,9 +117,31 @@ export const Sidebar: React.FC<DrawerContentComponentProps> = ({ navigation, sta
                 {user.role}
               </Text>
             </View>
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => setLogoutConfirmVisible(true)}
+              style={[styles.logoutIconBtn, { backgroundColor: colors.danger + '12' }]}
+              accessibilityLabel="Sign Out"
+            >
+              <Ionicons name="log-out-outline" size={18} color={colors.danger} />
+            </TouchableOpacity>
           </View>
         </View>
       )}
+
+      {/* Sign Out Confirmation Dialog */}
+      <ConfirmDialog
+        visible={logoutConfirmVisible}
+        onClose={() => setLogoutConfirmVisible(false)}
+        onConfirm={() => {
+          setLogoutConfirmVisible(false);
+          logout();
+        }}
+        title="Sign Out"
+        message="Are you sure you want to end your active session and sign out of Sanwariya Store Manager?"
+        confirmText="Sign Out"
+        type="danger"
+      />
     </View>
   );
 };
@@ -181,6 +219,13 @@ const styles = StyleSheet.create({
   },
   userRole: {
     fontSize: 10,
+  },
+  logoutIconBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

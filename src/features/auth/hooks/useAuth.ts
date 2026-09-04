@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../shared/services/apiClient';
 import { useAuthStore, UserSession } from '../store/authStore';
 import Toast from 'react-native-toast-message';
@@ -69,9 +69,15 @@ export function useLogin() {
 
 export function useLogout() {
   const { clearSession } = useAuthStore();
+  const queryClient = useQueryClient();
 
   return () => {
     clearSession();
+    try {
+      queryClient.clear();
+    } catch {
+      // ignore
+    }
     Toast.show({
       type: 'info',
       text1: 'Logged Out',
@@ -79,3 +85,4 @@ export function useLogout() {
     });
   };
 }
+

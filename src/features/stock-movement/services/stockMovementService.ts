@@ -74,23 +74,38 @@ export const stockMovementService = {
       else if (params.type === 'Adjustment') query.movementType = 'ADJUSTMENT_IN,ADJUSTMENT_OUT';
     }
 
-    const res = await apiClient.get<{
-      movements: BackendStockMovement[];
-      pagination: { total: number; page: number; limit: number; pages: number };
-    }>('/store/inventory/movements', query);
+    const res: any = await apiClient.get('/store/inventory/movements', query);
 
-    let items = (res.movements || []).map(mapMovement);
+    const rawList: BackendStockMovement[] = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res?.movements)
+      ? res.movements
+      : Array.isArray(res)
+      ? res
+      : [];
+
+    let items = rawList.map(mapMovement);
 
     // Client search filter if provided
     if (params.search) {
       const q = params.search.toLowerCase();
-      items = items.filter((i) => i.productName.toLowerCase().includes(q));
+      items = items.filter(
+        (i) => i.productName.toLowerCase().includes(q) || i.referenceId.toLowerCase().includes(q)
+      );
     }
 
-    const total = res.pagination?.total ?? items.length;
-    const pageSize = res.pagination?.limit || 10;
-    const page = res.pagination?.page || 1;
-    const totalPages = res.pagination?.pages || Math.ceil(total / pageSize) || 1;
+    const total = Array.isArray(res)
+      ? items.length
+      : res?.totalCount ?? res?.pagination?.total ?? items.length;
+    const pageSize = Array.isArray(res)
+      ? 10
+      : res?.pageSize ?? res?.pagination?.limit ?? 10;
+    const page = Array.isArray(res)
+      ? 1
+      : res?.page ?? res?.pagination?.page ?? 1;
+    const totalPages = Array.isArray(res)
+      ? 1
+      : res?.totalPages ?? res?.pagination?.pages ?? (Math.ceil(total / pageSize) || 1);
 
     return {
       data: items,

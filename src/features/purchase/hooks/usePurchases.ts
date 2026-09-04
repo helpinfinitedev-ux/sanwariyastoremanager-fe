@@ -32,6 +32,7 @@ export function useCreatePurchase() {
     mutationFn: (dto: CreatePurchaseDto) => purchaseService.createPurchase(dto),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
+      queryClient.invalidateQueries({ queryKey: ['vendors'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardKpis'] });
       queryClient.invalidateQueries({ queryKey: ['storeDashboard'] });
       queryClient.invalidateQueries({ queryKey: ['inventoryList'] });
@@ -64,6 +65,7 @@ export function useUpdatePurchase(id: string) {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['purchases'] });
       queryClient.invalidateQueries({ queryKey: ['purchase', id] });
+      queryClient.invalidateQueries({ queryKey: ['vendors'] });
       queryClient.invalidateQueries({ queryKey: ['dashboardKpis'] });
       queryClient.invalidateQueries({ queryKey: ['storeDashboard'] });
       queryClient.invalidateQueries({ queryKey: ['inventoryList'] });

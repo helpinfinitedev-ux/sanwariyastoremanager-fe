@@ -37,6 +37,7 @@ export const LoginScreen: React.FC = () => {
   const {
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema) as any,
@@ -45,6 +46,11 @@ export const LoginScreen: React.FC = () => {
       password: '',
     },
   });
+
+  const handleQuickFill = (mobile: string, pass: string) => {
+    setValue('mobileNumber', mobile, { shouldValidate: true });
+    setValue('password', pass, { shouldValidate: true });
+  };
 
   const onSubmit = (data: LoginFormValues) => {
     if (rememberMe) {
@@ -182,14 +188,33 @@ export const LoginScreen: React.FC = () => {
             />
 
             <View style={[styles.helpBox, { backgroundColor: colors.surfaceHover, borderColor: colors.border }]}>
-              <Text style={[styles.helpTitle, { color: colors.text }]}>Pre-seeded Demo Accounts:</Text>
-              <View style={styles.demoAccountRow}>
-                <Text style={[styles.helpText, { color: colors.text }]}>Active (Amit): </Text>
-                <Text style={[styles.helpTextBold, { color: colors.textSecondary }]}>1234567890 / password123</Text>
-              </View>
-              <View style={styles.demoAccountRow}>
-                <Text style={[styles.helpText, { color: colors.text }]}>Inactive (Priya): </Text>
-                <Text style={[styles.helpTextBold, { color: colors.textSecondary }]}>9876543210 / password123</Text>
+              <Text style={[styles.helpTitle, { color: colors.text }]}>Quick Demo Log In (Tap to autofill):</Text>
+              <View style={styles.quickFillContainer}>
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  style={[styles.quickFillBtn, { backgroundColor: colors.surface, borderColor: colors.primary }]}
+                  onPress={() => handleQuickFill('9876500003', 'password123')}
+                >
+                  <Ionicons name="storefront-outline" size={18} color={colors.primary} />
+                  <View style={styles.quickFillContent}>
+                    <Text style={[styles.quickFillRole, { color: colors.primary }]}>Store Manager</Text>
+                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>9876500003 / password123</Text>
+                  </View>
+                  <Ionicons name="arrow-forward-circle" size={18} color={colors.primary} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  style={[styles.quickFillBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                  onPress={() => handleQuickFill('9999999999', 'admin123')}
+                >
+                  <Ionicons name="shield-checkmark-outline" size={18} color={colors.textSecondary} />
+                  <View style={styles.quickFillContent}>
+                    <Text style={[styles.quickFillRole, { color: colors.text }]}>System Admin</Text>
+                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>9999999999 / admin123</Text>
+                  </View>
+                  <Ionicons name="arrow-forward-circle-outline" size={18} color={colors.textSecondary} />
+                </TouchableOpacity>
               </View>
             </View>
           </Card>
@@ -305,25 +330,36 @@ const styles = StyleSheet.create({
   helpBox: {
     marginTop: spacing.xl,
     padding: spacing.md,
-    borderRadius: 6,
+    borderRadius: 8,
     borderWidth: 1,
-    gap: 4,
+    gap: spacing.sm,
   },
   helpTitle: {
     fontSize: 12,
     fontWeight: '700',
     marginBottom: 2,
   },
-  demoAccountRow: {
+  quickFillContainer: {
+    gap: spacing.xs,
+  },
+  quickFillBtn: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    alignItems: 'center',
+    padding: spacing.sm,
+    borderRadius: 6,
+    borderWidth: 1,
+    gap: spacing.sm,
   },
-  helpText: {
-    fontSize: 11,
+  quickFillContent: {
+    flex: 1,
   },
-  helpTextBold: {
+  quickFillRole: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  quickFillCreds: {
     fontSize: 11,
-    fontWeight: '600',
+    marginTop: 1,
   },
 });
 

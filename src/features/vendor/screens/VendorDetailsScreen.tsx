@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from '@/web/primitives';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
 import PageHeader from '../../../shared/components/layout/PageHeader';
 import Button from '../../../shared/components/ui/Button';
@@ -16,11 +16,11 @@ import VendorPurchaseList from '../components/VendorPurchaseList';
 import VendorLedger from '../components/VendorLedger';
 import VendorPaymentModal from '../components/VendorPaymentModal';
 import { Purchase } from '../../../shared/mock/mockDb';
+import { useNavigation, useRoute } from '@/web/navigation';
 
-export const VendorDetailsScreen: React.FC<{ route: any; navigation: any }> = ({
-  route,
-  navigation,
-}) => {
+export const VendorDetailsScreen: React.FC = () => {
+  const route = useRoute<any>();
+  const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const vendorId = route.params?.id;
 

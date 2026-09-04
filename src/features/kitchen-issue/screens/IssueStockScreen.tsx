@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, StyleSheet, Text, ScrollView, TouchableOpacity } from '@/web/primitives';
+import { useNavigation } from '@/web/navigation';
+import { NativeStackNavigationProp } from '@/web/navigation';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,7 +18,7 @@ import Input from '../../../shared/components/ui/Input';
 import Select from '../../../shared/components/ui/Select';
 import Button from '../../../shared/components/ui/Button';
 import Card from '../../../shared/components/ui/Card';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import { ROUTES } from '../../../shared/constants/routes';
 import { KitchenIssueStackParamList } from '../../../app/navigation/types';
 

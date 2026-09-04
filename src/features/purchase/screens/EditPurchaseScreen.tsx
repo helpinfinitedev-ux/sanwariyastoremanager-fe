@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, StyleSheet, ActivityIndicator, Text } from '@/web/primitives';
+import { useNavigation, useRoute, RouteProp } from '@/web/navigation';
+import { NativeStackNavigationProp } from '@/web/navigation';
 import { usePurchaseById, useUpdatePurchase } from '../hooks/usePurchases';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';

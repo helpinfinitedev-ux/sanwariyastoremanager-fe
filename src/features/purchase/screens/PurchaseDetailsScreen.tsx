@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Platform, TouchableOpacity } from 'react-native';
-import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Image, Platform, TouchableOpacity } from '@/web/primitives';
+import { useRoute, useNavigation, RouteProp } from '@/web/navigation';
+import { NativeStackNavigationProp } from '@/web/navigation';
 import { usePurchaseById, useUpdatePurchase } from '../hooks/usePurchases';
 import { useVendorDetails, useMakeVendorPayment } from '../../vendor/hooks/useVendors';
 import { useTheme } from '../../../app/providers/ThemeProvider';
@@ -17,7 +17,7 @@ import { formatCurrency, formatDate } from '../../../shared/utils/formatters';
 import { PurchaseStackParamList } from '../../../app/navigation/types';
 import { ROUTES } from '../../../shared/constants/routes';
 import { useAllProductsRaw } from '../../inventory/hooks/useInventory';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 type RoutePropType = RouteProp<PurchaseStackParamList, 'PurchaseDetails'>;
 type NavigationProp = NativeStackNavigationProp<PurchaseStackParamList>;

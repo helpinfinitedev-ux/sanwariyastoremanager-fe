@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet, ViewStyle, TextInputProps } from 'react-native';
+import { View, Text, TextInput, StyleSheet, ViewStyle, TextInputProps } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
 
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 interface InputProps extends TextInputProps {
   label?: string;

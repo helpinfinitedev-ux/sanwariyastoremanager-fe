@@ -1,65 +1,19 @@
-import { Platform } from 'react-native';
-
 class HybridStorage {
-  private mmkv: any;
-  private isWeb: boolean;
   private fallbackStore: Record<string, string> = {};
 
-  constructor() {
-    this.isWeb = Platform.OS === 'web';
-    if (!this.isWeb) {
-      try {
-        const { MMKV } = require('react-native-mmkv');
-        this.mmkv = new MMKV();
-      } catch (e) {
-        console.warn('MMKV not available in this environment. Falling back to local storage/memory.', e);
-        this.mmkv = null;
-      }
-    }
-  }
-
   getString(key: string): string | undefined {
-    if (this.isWeb || !this.mmkv) {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        return window.localStorage.getItem(key) || undefined;
-      }
-      return this.fallbackStore[key];
-    }
-    try {
-      return this.mmkv.getString(key);
-    } catch (e) {
-      return undefined;
-    }
+    if (typeof window !== 'undefined' && window.localStorage) return window.localStorage.getItem(key) || undefined;
+    return this.fallbackStore[key];
   }
 
   set(key: string, value: string): void {
-    if (this.isWeb || !this.mmkv) {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem(key, value);
-      }
-      this.fallbackStore[key] = value;
-    } else {
-      try {
-        this.mmkv.set(key, value);
-      } catch (e) {
-        console.error('MMKV write error:', e);
-      }
-    }
+    if (typeof window !== 'undefined' && window.localStorage) window.localStorage.setItem(key, value);
+    this.fallbackStore[key] = value;
   }
 
   delete(key: string): void {
-    if (this.isWeb || !this.mmkv) {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.removeItem(key);
-      }
-      delete this.fallbackStore[key];
-    } else {
-      try {
-        this.mmkv.delete(key);
-      } catch (e) {
-        console.error('MMKV delete error:', e);
-      }
-    }
+    if (typeof window !== 'undefined' && window.localStorage) window.localStorage.removeItem(key);
+    delete this.fallbackStore[key];
   }
 
   getBoolean(key: string): boolean | undefined {

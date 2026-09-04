@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView, ViewStyle, useWindowDimensions } from 'react-native';
+import { View, StyleSheet, ScrollView, ViewStyle, useWindowDimensions } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import TopBar from './TopBar';
+import { useNavigation } from '@/web/navigation';
 
 interface ScreenContainerProps {
   title?: string;
@@ -19,6 +20,7 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
   onMenuPress,
 }) => {
   const { colors } = useTheme();
+  const navigation = useNavigation();
 
   const containerStyle = [
     styles.container,
@@ -28,7 +30,7 @@ export const ScreenContainer: React.FC<ScreenContainerProps> = ({
 
   return (
     <View style={styles.outer}>
-      <TopBar title={title} onMenuPress={onMenuPress} />
+      <TopBar title={title} onMenuPress={onMenuPress || navigation.openDrawer} />
       {scrollable ? (
         <ScrollView contentContainerStyle={styles.scrollContent} style={containerStyle}>
           {children}

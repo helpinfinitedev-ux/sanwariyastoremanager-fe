@@ -1,7 +1,7 @@
 import React, { createContext, useContext } from 'react';
 import { useThemeStore } from '../../store/themeStore';
 import { lightTheme, darkTheme, ThemeColors } from '../../shared/theme/themes';
-import { View, StyleSheet, StatusBar } from 'react-native';
+import { View, StyleSheet } from '@/web/primitives';
 
 const ThemeContext = createContext<{
   theme: 'light' | 'dark';
@@ -19,13 +19,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const { theme, toggleTheme } = useThemeStore();
   const colors = theme === 'dark' ? darkTheme : lightTheme;
 
+  React.useEffect(() => {
+    document.documentElement.style.colorScheme = theme;
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', colors.background);
+  }, [theme, colors.background]);
+
   return (
     <ThemeContext.Provider value={{ theme, colors, toggleTheme }}>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar 
-          barStyle={theme === 'dark' ? 'light-content' : 'dark-content'} 
-          backgroundColor={colors.background} 
-        />
+      <View style={[styles.container, { backgroundColor: colors.background }]}> 
         {children}
       </View>
     </ThemeContext.Provider>
@@ -35,6 +36,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
+    height: '100vh',
   },
 });
 export default ThemeProvider;

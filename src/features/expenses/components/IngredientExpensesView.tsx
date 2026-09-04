@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, useWindowDimensions } from '@/web/primitives';
 import Card from '../../../shared/components/ui/Card';
 import Badge from '../../../shared/components/ui/Badge';
 import Select from '../../../shared/components/ui/Select';
@@ -11,7 +11,7 @@ import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import { useIngredientExpenses } from '../hooks/useExpenses';
 import { dayjs } from '../../../shared/utils/formatters';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 export const IngredientExpensesView: React.FC = () => {
   const { colors } = useTheme();

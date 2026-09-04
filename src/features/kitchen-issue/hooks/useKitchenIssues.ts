@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import kitchenIssueService from '../services/kitchenIssueService';
 import { KitchenIssueQueryParams, CreateKitchenIssueDto } from '../types';
-import Toast from 'react-native-toast-message';
+import Toast from '@/web/toast';
 import { Kitchen } from '../../../shared/mock/mockDb';
 
 export function useIssueHistory(params: KitchenIssueQueryParams) {

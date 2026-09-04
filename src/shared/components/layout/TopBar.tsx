@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useWindowDimensions } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { useThemeStore } from '../../../store/themeStore';
 import { useAuthStore } from '../../../features/auth/store/authStore';
 import { useLogout } from '../../../features/auth/hooks/useAuth';
 import ConfirmDialog from '../feedback/ConfirmDialog';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 interface TopBarProps {
   title: string;

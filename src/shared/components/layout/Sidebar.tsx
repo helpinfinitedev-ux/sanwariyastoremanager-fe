@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { DrawerContentComponentProps } from '@react-navigation/drawer';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from '@/web/primitives';
+import { groupForRoute, useCurrentRoute, useNavigation } from '@/web/navigation';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { useAuthStore } from '../../../features/auth/store/authStore';
 import { useLogout } from '../../../features/auth/hooks/useAuth';
 import ConfirmDialog from '../feedback/ConfirmDialog';
 import { spacing, typography } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import { ROUTES } from '../../constants/routes';
 
 interface SidebarItem {
@@ -15,8 +15,10 @@ interface SidebarItem {
   icon: keyof typeof Ionicons.glyphMap;
 }
 
-export const Sidebar: React.FC<DrawerContentComponentProps> = ({ navigation, state }) => {
+export const Sidebar: React.FC = () => {
   const { colors, theme } = useTheme();
+  const navigation = useNavigation();
+  const { route } = useCurrentRoute();
   const { user } = useAuthStore();
   const logout = useLogout();
   const [logoutConfirmVisible, setLogoutConfirmVisible] = useState(false);
@@ -34,8 +36,7 @@ export const Sidebar: React.FC<DrawerContentComponentProps> = ({ navigation, sta
     { name: 'Profile Settings', route: ROUTES.MAIN.PROFILE, icon: 'person-outline' },
   ];
 
-  // Map state.index to active items
-  const activeRouteName = state.routeNames[state.index];
+  const activeRouteName = groupForRoute(route);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.surface, borderRightColor: colors.border }]}>

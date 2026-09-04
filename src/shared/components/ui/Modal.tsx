@@ -1,8 +1,8 @@
 import React from 'react';
-import { Modal as RNModal, View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import { Modal as RNModal, View, Text, StyleSheet, TouchableOpacity, ViewStyle } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 interface ModalProps {
   visible: boolean;

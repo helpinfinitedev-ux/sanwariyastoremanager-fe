@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import inventoryService, { StockAdjustmentPayload } from '../services/inventoryService';
-import Toast from 'react-native-toast-message';
+import Toast from '@/web/toast';
 import { Category, Unit, StorageLocation } from '../../../shared/mock/mockDb';
 
 export function useInventoryList(params: {

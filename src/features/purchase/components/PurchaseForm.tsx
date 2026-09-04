@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Platform } from '@/web/primitives';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -12,7 +12,7 @@ import Select from '../../../shared/components/ui/Select';
 import DatePicker from '../../../shared/components/ui/DatePicker';
 import Button from '../../../shared/components/ui/Button';
 import Card from '../../../shared/components/ui/Card';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import { formatCurrency } from '../../../shared/utils/formatters';
 import CreatableSelect from '../../../shared/components/ui/CreatableSelect';
 import IngredientCreateModal from '../../../shared/components/modals/IngredientCreateModal';

@@ -1,13 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions } from '@/web/primitives';
+import { useNavigation } from '@/web/navigation';
+import { NativeStackNavigationProp } from '@/web/navigation';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
 import PageHeader from '../../../shared/components/layout/PageHeader';
 import Card from '../../../shared/components/ui/Card';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import { ROUTES } from '../../../shared/constants/routes';
 import { ReportsStackParamList } from '../../../app/navigation/types';
 

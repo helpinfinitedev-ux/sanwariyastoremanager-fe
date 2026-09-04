@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../../../shared/components/ui/Button';
-import Toast from 'react-native-toast-message';
+import Toast from '@/web/toast';
 
 interface ExportButtonProps {
   reportName: string;

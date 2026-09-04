@@ -66,16 +66,27 @@ export const inventoryService = {
       else queryParams.stockStatus = params.stockStatus;
     }
 
-    const res = await apiClient.get<{
-      ingredients: BackendIngredient[];
-      pagination: { total: number; page: number; limit: number; pages: number };
-    }>('/store/inventory', queryParams);
+    const res: any = await apiClient.get('/store/inventory', queryParams);
 
-    const items = (res.ingredients || []).map(mapIngredientToProduct);
-    const total = res.pagination?.total ?? items.length;
-    const pageSize = res.pagination?.limit || 10;
-    const page = res.pagination?.page || 1;
-    const totalPages = res.pagination?.pages || Math.ceil(total / pageSize) || 1;
+    const rawList: BackendIngredient[] = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.data)
+      ? res.data
+      : res?.ingredients || [];
+
+    const items = rawList.map(mapIngredientToProduct);
+    const total = Array.isArray(res)
+      ? items.length
+      : res?.totalCount ?? res?.pagination?.total ?? items.length;
+    const pageSize = Array.isArray(res)
+      ? 10
+      : res?.pageSize ?? res?.pagination?.limit ?? 10;
+    const page = Array.isArray(res)
+      ? 1
+      : res?.page ?? res?.pagination?.page ?? 1;
+    const totalPages = Array.isArray(res)
+      ? 1
+      : res?.totalPages ?? res?.pagination?.pages ?? (Math.ceil(total / pageSize) || 1);
 
     return {
       data: items,
@@ -87,16 +98,19 @@ export const inventoryService = {
   },
 
   getProductById: async (id: string): Promise<Product> => {
-    const res = await apiClient.get<{ ingredient: BackendIngredient }>(`/store/inventory/${id}`);
-    const ing = res.ingredient || (res as any);
+    const res: any = await apiClient.get(`/store/inventory/${id}`);
+    const ing = res?.ingredient || res;
     return mapIngredientToProduct(ing);
   },
 
   getAllProductsRaw: async (): Promise<Product[]> => {
-    const res = await apiClient.get<{
-      ingredients: BackendIngredient[];
-    }>('/store/inventory', { limit: 1000 });
-    return (res.ingredients || []).map(mapIngredientToProduct);
+    const res: any = await apiClient.get('/store/inventory', { limit: 1000 });
+    const rawList: BackendIngredient[] = Array.isArray(res)
+      ? res
+      : Array.isArray(res?.data)
+      ? res.data
+      : res?.ingredients || [];
+    return rawList.map(mapIngredientToProduct);
   },
 
   createProduct: async (productData: {

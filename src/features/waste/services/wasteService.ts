@@ -65,16 +65,29 @@ export const wasteService = {
     if (params.startDate) query.startDate = params.startDate;
     if (params.endDate) query.endDate = params.endDate;
 
-    const res = await apiClient.get<{
-      waste: BackendWaste[];
-      pagination: { total: number; page: number; limit: number; pages: number };
-    }>('/store/waste', query);
+    const res: any = await apiClient.get('/store/waste', query);
 
-    const items = (res.waste || []).map(mapBackendWaste);
-    const total = res.pagination?.total ?? items.length;
-    const pageSize = res.pagination?.limit || 10;
-    const page = res.pagination?.page || 1;
-    const totalPages = res.pagination?.pages || Math.ceil(total / pageSize) || 1;
+    const rawList: BackendWaste[] = Array.isArray(res?.data)
+      ? res.data
+      : Array.isArray(res?.waste)
+      ? res.waste
+      : Array.isArray(res)
+      ? res
+      : [];
+
+    const items = rawList.map(mapBackendWaste);
+    const total = Array.isArray(res)
+      ? items.length
+      : res?.totalCount ?? res?.pagination?.total ?? items.length;
+    const pageSize = Array.isArray(res)
+      ? 10
+      : res?.pageSize ?? res?.pagination?.limit ?? 10;
+    const page = Array.isArray(res)
+      ? 1
+      : res?.page ?? res?.pagination?.page ?? 1;
+    const totalPages = Array.isArray(res)
+      ? 1
+      : res?.totalPages ?? res?.pagination?.pages ?? (Math.ceil(total / pageSize) || 1);
 
     return {
       data: items,
@@ -86,8 +99,8 @@ export const wasteService = {
   },
 
   getWasteById: async (id: string): Promise<WasteEntry> => {
-    const res = await apiClient.get<{ waste: BackendWaste }>(`/store/waste/${id}`);
-    const w = res.waste || (res as any);
+    const res: any = await apiClient.get(`/store/waste/${id}`);
+    const w = res?.waste || res;
     return mapBackendWaste(w);
   },
 
@@ -103,8 +116,8 @@ export const wasteService = {
       ],
     };
 
-    const res = await apiClient.post<{ waste: BackendWaste }>('/store/waste', payload);
-    const w = res.waste || (res as any);
+    const res: any = await apiClient.post('/store/waste', payload);
+    const w = res?.waste || res;
     return mapBackendWaste(w);
   },
 

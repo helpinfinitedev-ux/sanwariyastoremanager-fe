@@ -1,7 +1,11 @@
 import { storage } from "../../storage/mmkv";
 
-const DEFAULT_BASE_URL =
-  process.env.VITE_PUBLIC_API_URL || "http://localhost:4000/api";
+const FALLBACK_BASE_URL = "https://sr-backend-xi.vercel.app/api";
+
+const configuredBaseUrl =
+  import.meta.env.VITE_PUBLIC_API_URL ||
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.EXPO_PUBLIC_API_URL;
 
 export interface ApiErrorResponse {
   success: boolean;
@@ -31,10 +35,7 @@ function getAuthToken(): string | null {
 }
 
 function getBaseUrl(): string {
-  if (typeof process !== "undefined" && process.env?.VITE_PUBLIC_API_URL) {
-    return process.env.VITE_PUBLIC_API_URL.replace(/\/+$/, "");
-  }
-  return DEFAULT_BASE_URL;
+  return (configuredBaseUrl || FALLBACK_BASE_URL).replace(/\/+$/, "");
 }
 
 export async function request<T>(

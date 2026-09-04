@@ -1,8 +1,8 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, useWindowDimensions } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, useWindowDimensions } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 interface DrawerProps {
   visible: boolean;

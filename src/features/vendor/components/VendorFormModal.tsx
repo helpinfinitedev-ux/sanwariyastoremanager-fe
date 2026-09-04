@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Alert } from '@/web/primitives';
 import Modal from '../../../shared/components/ui/Modal';
 import Input from '../../../shared/components/ui/Input';
 import Select from '../../../shared/components/ui/Select';

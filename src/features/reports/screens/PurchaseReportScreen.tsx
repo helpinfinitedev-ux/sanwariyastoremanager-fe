@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, StyleSheet, ActivityIndicator, Text, ScrollView } from '@/web/primitives';
+import { useNavigation } from '@/web/navigation';
 import { usePurchaseReport } from '../hooks/useReports';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';

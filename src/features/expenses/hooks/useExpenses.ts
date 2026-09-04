@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import expensesService from '../services/expensesService';
 import { OtherExpenseFormInputs } from '../types/expenses.types';
-import Toast from 'react-native-toast-message';
+import Toast from '@/web/toast';
 
 export const EXPENSE_QUERY_KEYS = {
   other: ['expenses', 'other'] as const,

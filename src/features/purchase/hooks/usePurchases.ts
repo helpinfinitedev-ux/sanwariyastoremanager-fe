@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import purchaseService from '../services/purchaseService';
 import { PurchaseQueryParams, CreatePurchaseDto, UpdatePurchaseDto } from '../types';
-import Toast from 'react-native-toast-message';
+import Toast from '@/web/toast';
 
 export function usePurchases(params: Partial<PurchaseQueryParams> = {}) {
   return useQuery({

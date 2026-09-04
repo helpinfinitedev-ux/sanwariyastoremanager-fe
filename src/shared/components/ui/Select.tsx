@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, FlatList, StyleSheet, ViewStyle } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 export interface SelectOption {
   label: string;

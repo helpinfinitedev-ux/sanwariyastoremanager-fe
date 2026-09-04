@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, useWindowDimensions, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, useWindowDimensions, ActivityIndicator } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import EmptyState from './EmptyState';
 
 export interface Column<T> {

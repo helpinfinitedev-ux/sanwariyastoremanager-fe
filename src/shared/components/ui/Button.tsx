@@ -1,9 +1,9 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
 
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 interface ButtonProps {
   title?: string;

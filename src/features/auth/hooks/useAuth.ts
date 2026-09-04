@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../../../shared/services/apiClient';
 import { useAuthStore, UserSession } from '../store/authStore';
-import Toast from 'react-native-toast-message';
+import Toast from '@/web/toast';
 
 interface BackendLoginResponse {
   token: string;

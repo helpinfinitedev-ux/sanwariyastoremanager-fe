@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from '@/web/primitives';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -10,7 +10,7 @@ import Input from '../../../shared/components/ui/Input';
 import Button from '../../../shared/components/ui/Button';
 import Card from '../../../shared/components/ui/Card';
 import { storage } from '../../../storage/mmkv';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 const loginSchema = z.object({
   mobileNumber: z
@@ -193,12 +193,12 @@ export const LoginScreen: React.FC = () => {
                 <TouchableOpacity
                   activeOpacity={0.7}
                   style={[styles.quickFillBtn, { backgroundColor: colors.surface, borderColor: colors.primary }]}
-                  onPress={() => handleQuickFill('9876500003', 'password123')}
+                  onPress={() => handleQuickFill('1234567890', 'password123')}
                 >
                   <Ionicons name="storefront-outline" size={18} color={colors.primary} />
                   <View style={styles.quickFillContent}>
-                    <Text style={[styles.quickFillRole, { color: colors.primary }]}>Store Manager</Text>
-                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>9876500003 / password123</Text>
+                    <Text style={[styles.quickFillRole, { color: colors.primary }]}>Main Branch Manager</Text>
+                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>1234567890 / password123</Text>
                   </View>
                   <Ionicons name="arrow-forward-circle" size={18} color={colors.primary} />
                 </TouchableOpacity>
@@ -206,12 +206,12 @@ export const LoginScreen: React.FC = () => {
                 <TouchableOpacity
                   activeOpacity={0.7}
                   style={[styles.quickFillBtn, { backgroundColor: colors.surface, borderColor: colors.border }]}
-                  onPress={() => handleQuickFill('9999999999', 'admin123')}
+                  onPress={() => handleQuickFill('8888888888', 'password123')}
                 >
                   <Ionicons name="shield-checkmark-outline" size={18} color={colors.textSecondary} />
                   <View style={styles.quickFillContent}>
-                    <Text style={[styles.quickFillRole, { color: colors.text }]}>System Admin</Text>
-                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>9999999999 / admin123</Text>
+                    <Text style={[styles.quickFillRole, { color: colors.text }]}>Highway Outlet Manager</Text>
+                    <Text style={[styles.quickFillCreds, { color: colors.textSecondary }]}>8888888888 / password123</Text>
                   </View>
                   <Ionicons name="arrow-forward-circle-outline" size={18} color={colors.textSecondary} />
                 </TouchableOpacity>

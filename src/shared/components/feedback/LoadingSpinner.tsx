@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
 

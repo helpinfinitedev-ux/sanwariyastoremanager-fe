@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ViewStyle, TouchableOpacity } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
 import Button from '../ui/Button';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 interface PageHeaderProps {
   title: string;

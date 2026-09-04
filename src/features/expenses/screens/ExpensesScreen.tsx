@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, useWindowDimensions } from '@/web/primitives';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
 import PageHeader from '../../../shared/components/layout/PageHeader';
 import Card from '../../../shared/components/ui/Card';
@@ -7,7 +7,7 @@ import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
 import IngredientExpensesView from '../components/IngredientExpensesView';
 import OtherExpensesView from '../components/OtherExpensesView';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 type ExpenseView = 'landing' | 'ingredient' | 'other';
 

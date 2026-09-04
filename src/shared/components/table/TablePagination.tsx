@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import Select from '../ui/Select';
 
 interface TablePaginationProps {

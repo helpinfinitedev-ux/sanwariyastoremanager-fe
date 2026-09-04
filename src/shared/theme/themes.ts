@@ -1,5 +1,3 @@
-import { Platform } from 'react-native';
-
 export interface ThemeColors {
   background: string;
   surface: string;
@@ -79,7 +77,7 @@ export const spacing = {
 };
 
 export const typography = {
-  fontFamily: Platform.select({ ios: 'System', android: 'System', default: 'System-UI' }) || 'System',
+  fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
   sizes: {
     xs: 11,
     sm: 13,

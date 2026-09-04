@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, Platform, ViewStyle, TextInput } from 'react-native';
+import { View, Text, StyleSheet, Platform, ViewStyle, TextInput } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 interface DatePickerProps {
   label?: string;

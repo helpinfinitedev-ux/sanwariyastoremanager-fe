@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from '@/web/primitives';
 import Modal from '../ui/Modal';
 import Button from '../ui/Button';
 import { spacing } from '../../theme/themes';

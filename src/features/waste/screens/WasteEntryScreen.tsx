@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, StyleSheet, Text, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { View, StyleSheet, Text, ScrollView } from '@/web/primitives';
+import { useNavigation } from '@/web/navigation';
+import { NativeStackNavigationProp } from '@/web/navigation';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';

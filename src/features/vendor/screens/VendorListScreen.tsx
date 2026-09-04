@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, useWindowDimensions, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, useWindowDimensions, FlatList, Alert } from '@/web/primitives';
 import ScreenContainer from '../../../shared/components/layout/ScreenContainer';
 import PageHeader from '../../../shared/components/layout/PageHeader';
 import Button from '../../../shared/components/ui/Button';
@@ -16,6 +16,7 @@ import { Vendor } from '../types/vendor.types';
 import VendorCard from '../components/VendorCard';
 import VendorFormModal from '../components/VendorFormModal';
 import { ROUTES } from '../../../shared/constants/routes';
+import { useNavigation } from '@/web/navigation';
 
 const STATUS_FILTER_OPTIONS = [
   { label: 'All Vendors', value: 'ALL' },
@@ -23,8 +24,9 @@ const STATUS_FILTER_OPTIONS = [
   { label: 'Active Only', value: 'ACTIVE' },
 ];
 
-export const VendorListScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
+export const VendorListScreen: React.FC = () => {
   const { colors } = useTheme();
+  const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 

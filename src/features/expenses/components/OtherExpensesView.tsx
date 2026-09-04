@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Platform, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Platform, useWindowDimensions } from '@/web/primitives';
 import Card from '../../../shared/components/ui/Card';
 import Badge from '../../../shared/components/ui/Badge';
 import DatePicker from '../../../shared/components/ui/DatePicker';
@@ -9,7 +9,7 @@ import LoadingSpinner from '../../../shared/components/feedback/LoadingSpinner';
 import ErrorState from '../../../shared/components/feedback/ErrorState';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import { useOtherExpenses, useCreateOtherExpense, useUpdateOtherExpense, useDeleteOtherExpense } from '../hooks/useExpenses';
 import { OtherExpense, OtherExpenseFormInputs } from '../types/expenses.types';
 import OtherExpenseFormModal from './OtherExpenseFormModal';

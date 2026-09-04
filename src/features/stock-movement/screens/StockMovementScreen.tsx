@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, StyleSheet, Text, TouchableOpacity, ScrollView } from '@/web/primitives';
+import { useNavigation } from '@/web/navigation';
 import { useStockMovements } from '../hooks/useStockMovements';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../../shared/theme/themes';
@@ -15,7 +15,7 @@ import Select from '../../../shared/components/ui/Select';
 import DatePicker from '../../../shared/components/ui/DatePicker';
 import { StockMovement } from '../../../shared/mock/mockDb';
 import { formatNumber, formatDate } from '../../../shared/utils/formatters';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import { useDebounce } from '../../../shared/hooks/useDebounce';
 import { ROUTES } from '../../../shared/constants/routes';
 

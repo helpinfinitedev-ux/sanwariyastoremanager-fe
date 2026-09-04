@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity } from '@/web/primitives';
+import { useNavigation } from '@/web/navigation';
 import Card from '../../../shared/components/ui/Card';
 import Badge from '../../../shared/components/ui/Badge';
 import Input from '../../../shared/components/ui/Input';

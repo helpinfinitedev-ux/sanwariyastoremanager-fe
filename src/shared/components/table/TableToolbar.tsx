@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, StyleSheet, TextInput, TouchableOpacity, Text } from '@/web/primitives';
 import { useTheme } from '../../../app/providers/ThemeProvider';
 import { spacing } from '../../theme/themes';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 import Button from '../ui/Button';
 
 interface TableToolbarProps {

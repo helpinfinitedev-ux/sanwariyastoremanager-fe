@@ -1,4 +1,4 @@
-import { NavigatorScreenParams } from '@react-navigation/native';
+import { NavigatorScreenParams } from '@/web/navigation';
 
 export type RootStackParamList = {
   AuthRoot: NavigatorScreenParams<AuthStackParamList>;

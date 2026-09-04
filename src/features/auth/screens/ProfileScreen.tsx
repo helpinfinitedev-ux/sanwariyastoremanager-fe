@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from '@/web/primitives';
 import { useAuthStore } from '../store/authStore';
 import { useLogout } from '../hooks/useAuth';
 import { useTheme } from '../../../app/providers/ThemeProvider';
@@ -9,7 +9,7 @@ import Card from '../../../shared/components/ui/Card';
 import Button from '../../../shared/components/ui/Button';
 import PageHeader from '../../../shared/components/layout/PageHeader';
 import ConfirmDialog from '../../../shared/components/feedback/ConfirmDialog';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@/web/icons';
 
 export const ProfileScreen: React.FC = () => {
   const { user } = useAuthStore();

@@ -62,7 +62,7 @@ export function useBrands() {
 export function useCreateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (category: Category) => Promise.resolve(category),
+    mutationFn: (category: Category) => inventoryService.createCategory(category),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
       Toast.show({

@@ -162,12 +162,46 @@ export const inventoryService = {
 
   // Supporting Lookups
   getCategories: async (): Promise<Category[]> => {
-    const prods = await inventoryService.getAllProductsRaw();
-    const categoriesSet = new Set(prods.map((p) => p.category).filter(Boolean));
-    ['Dairy', 'Grains', 'Produce', 'Spices', 'Meat', 'Beverages', 'Dry Goods', 'Packaging'].forEach((c) =>
-      categoriesSet.add(c)
-    );
-    return Array.from(categoriesSet).map((name) => ({ name, description: '', status: 'Active' }));
+    let backendCategories: string[] = [];
+    try {
+      const res: any = await apiClient.get('/store/inventory/categories');
+      if (Array.isArray(res)) {
+        backendCategories = res;
+      } else if (Array.isArray(res?.categories)) {
+        backendCategories = res.categories;
+      }
+    } catch {
+      const prods = await inventoryService.getAllProductsRaw();
+      backendCategories = prods.map((p) => p.category).filter(Boolean);
+    }
+
+    const defaultCategories = ['Dairy', 'Grains', 'Spices', 'Dry Goods', 'Packaging'];
+    const categoriesMap = new Map<string, string>();
+
+    defaultCategories.forEach((c) => {
+      categoriesMap.set(c.toLowerCase(), c);
+    });
+
+    backendCategories.forEach((c) => {
+      if (c && typeof c === 'string' && c.trim()) {
+        const trimmed = c.trim();
+        if (!categoriesMap.has(trimmed.toLowerCase())) {
+          categoriesMap.set(trimmed.toLowerCase(), trimmed);
+        }
+      }
+    });
+
+    return Array.from(categoriesMap.values()).map((name) => ({ name, description: '', status: 'Active' }));
+  },
+
+  createCategory: async (categoryData: { name: string; description?: string; status?: string }): Promise<Category> => {
+    const res: any = await apiClient.post('/store/inventory/categories', categoryData);
+    const cat = res?.category || res;
+    return {
+      name: cat?.name || categoryData.name,
+      description: cat?.description || categoryData.description || '',
+      status: cat?.status || categoryData.status || 'Active',
+    };
   },
 
   getUnits: async (): Promise<Unit[]> => {

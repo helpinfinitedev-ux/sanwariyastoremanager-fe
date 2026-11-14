@@ -139,6 +139,34 @@ export function useCreateProduct() {
   });
 }
 
+export function useUpdateProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: { name: string; category: string } }) =>
+      inventoryService.updateProduct(id, data),
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['inventoryList'] });
+      queryClient.invalidateQueries({ queryKey: ['productDetails', variables.id] });
+      queryClient.invalidateQueries({ queryKey: ['allProductsRaw'] });
+      queryClient.invalidateQueries({ queryKey: ['categories'] });
+      queryClient.invalidateQueries({ queryKey: ['inventoryReport'] });
+      queryClient.invalidateQueries({ queryKey: ['inventoryAnalytics'] });
+      Toast.show({
+        type: 'success',
+        text1: 'Ingredient Updated',
+        text2: `✓ Ingredient "${data.name}" updated successfully`,
+      });
+    },
+    onError: (err: any) => {
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to update ingredient',
+        text2: err.message || 'Please check the item name and category.',
+      });
+    },
+  });
+}
+
 export function useAdjustStock() {
   const queryClient = useQueryClient();
   return useMutation({

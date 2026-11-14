@@ -103,9 +103,16 @@ export function DataTable<T extends { id: string | number }>({
   );
 
   const renderRow = ({ item }: { item: T }) => (
-    <TouchableOpacity
-      activeOpacity={onRowPress ? 0.7 : 1}
-      onPress={() => onRowPress && onRowPress(item)}
+    <View
+      role={onRowPress ? 'button' : undefined}
+      tabIndex={onRowPress ? 0 : undefined}
+      onClick={() => onRowPress?.(item)}
+      onKeyDown={(event: any) => {
+        if (onRowPress && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault();
+          onRowPress(item);
+        }
+      }}
       style={[
         styles.row,
         { borderBottomColor: colors.divider },
@@ -132,7 +139,7 @@ export function DataTable<T extends { id: string | number }>({
           )}
         </View>
       ))}
-    </TouchableOpacity>
+    </View>
   );
 
   if (loading) {

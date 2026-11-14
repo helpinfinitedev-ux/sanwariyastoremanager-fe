@@ -10,6 +10,7 @@ export interface BackendWasteItem {
     name: string;
     sku?: string;
     unit?: string;
+    averageCost?: number;
   };
   quantity: number;
   unit?: string;
@@ -35,10 +36,16 @@ export interface BackendWaste {
 function mapBackendWaste(w: BackendWaste): WasteEntry {
   const firstItem = w.items?.[0];
   const totalQty = (w.items || []).reduce((acc, it) => acc + (it.quantity || 0), 0);
-  const totalLoss = (w.items || []).reduce(
-    (acc, it) => acc + (it.lineCost || (it.quantity || 0) * (it.unitCost || 0)),
-    0
-  );
+  const totalLoss = (w.items || []).reduce((acc, item) => {
+    if (item.lineCost !== undefined && item.lineCost !== null) {
+      const lineCost = Number(item.lineCost);
+      if (Number.isFinite(lineCost)) return acc + lineCost;
+    }
+
+    const quantity = Number(item.quantity) || 0;
+    const unitCost = Number(item.unitCost ?? item.ingredient?.averageCost) || 0;
+    return acc + quantity * unitCost;
+  }, 0);
 
   return {
     id: w._id || w.id || '',
@@ -48,7 +55,7 @@ function mapBackendWaste(w: BackendWaste): WasteEntry {
     quantity: totalQty,
     unit: (firstItem?.unit || firstItem?.ingredient?.unit || 'unit') as any,
     reason: w.reason,
-    valueLost: totalLoss,
+    valueLost: Math.round(totalLoss * 100) / 100,
     notes: w.notes || '',
     photoUrl: '',
   };

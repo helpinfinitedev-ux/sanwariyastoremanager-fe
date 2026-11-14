@@ -115,12 +115,11 @@ export const kitchenIssueService = {
 
   getKitchens: async (): Promise<Kitchen[]> => {
     return [
-      { name: 'Biryani Station', description: 'Rice & Biryani', status: 'Active' },
-      { name: 'Curry Section', description: 'Curries & Gravies', status: 'Active' },
-      { name: 'Tandoor Section', description: 'Breads & Tandoor', status: 'Active' },
-      { name: 'Dessert Section', description: 'Sweets & Desserts', status: 'Active' },
-      { name: 'Chinese Section', description: 'Wok & Starters', status: 'Active' },
-      { name: 'Pantry / Cold Prep', description: 'Salads & Juices', status: 'Active' },
+      { name: 'Kitchen', description: 'Main kitchen operations', status: 'Active' },
+      { name: 'Mocktail Bar', description: 'Mocktails and beverages', status: 'Active' },
+      { name: 'Restaurant', description: 'Restaurant service', status: 'Active' },
+      { name: 'Sanwariya Sweets', description: 'Sweets department', status: 'Active' },
+      { name: 'Others', description: 'Other departments', status: 'Active' },
     ];
   },
 

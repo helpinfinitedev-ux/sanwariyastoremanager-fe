@@ -7,6 +7,9 @@
     <meta name="description" content="Sanwariya Store Manager inventory and operations dashboard" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>Sanwariya ERP · Store Manager</title>
+    <!-- Runtime config: loaded before the app so window.__APP_CONFIG__ is set.
+         Overwritten by the container at startup from the Cloud Run env var. -->
+    <script src="/env-config.js"></script>
   </head>
   <body>
     <div id="root"></div>

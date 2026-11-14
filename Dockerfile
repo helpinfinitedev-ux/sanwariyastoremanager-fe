@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+
+# ---- Stage 1: build the Vite SPA ----
+FROM node:22-alpine AS build
+
+WORKDIR /app
+
+# Optional: bake a build-time default API URL. Runtime config
+# (window.__APP_CONFIG__) overrides this, so it is only a fallback.
+ARG VITE_PUBLIC_API_URL
+ENV VITE_PUBLIC_API_URL=${VITE_PUBLIC_API_URL}
+
+# Install dependencies against the lockfile for reproducible builds.
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Build the static output into /app/dist.
+COPY . .
+RUN npm run build
+
+# ---- Stage 2: serve the static files with nginx ----
+FROM nginx:1.27-alpine AS runtime
+
+# Cloud Run injects PORT (default 8080); nginx renders this into its
+# config via the official image's envsubst template mechanism.
+ENV PORT=8080
+
+# SPA-aware nginx config (template is processed on container start).
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Startup hook: writes /env-config.js from the runtime env var before nginx
+# starts. The nginx image runs executable *.sh files in /docker-entrypoint.d.
+COPY docker/40-env-config.sh /docker-entrypoint.d/40-env-config.sh
+RUN chmod +x /docker-entrypoint.d/40-env-config.sh
+
+# Copy the built assets.
+COPY --from=build /app/dist /usr/share/nginx/html
+
+EXPOSE 8080
+
+# The nginx:alpine entrypoint runs envsubst over /etc/nginx/templates/*,
+# runs /docker-entrypoint.d/*.sh, then starts nginx in the foreground.
+CMD ["nginx", "-g", "daemon off;"]

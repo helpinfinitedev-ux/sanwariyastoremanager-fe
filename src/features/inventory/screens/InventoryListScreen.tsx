@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Text } from '@/web/primitives';
+import { View, StyleSheet, Text, TouchableOpacity } from '@/web/primitives';
+import { Ionicons } from '@/web/icons';
 import { useNavigation } from '@/web/navigation';
 import { NativeStackNavigationProp } from '@/web/navigation';
 import { useInventoryList, useCategories } from '../hooks/useInventory';
@@ -17,6 +18,7 @@ import Select from '../../../shared/components/ui/Select';
 import Button from '../../../shared/components/ui/Button';
 import { Product } from '../../../shared/mock/mockDb';
 import IngredientCreateModal from '../../../shared/components/modals/IngredientCreateModal';
+import InventoryEditModal from '../components/InventoryEditModal';
 import { formatCurrency, formatNumber } from '../../../shared/utils/formatters';
 import { getStockStatus } from '../../../shared/utils/calculations';
 import { useDebounce } from '../../../shared/hooks/useDebounce';
@@ -45,6 +47,7 @@ export const InventoryListScreen: React.FC = () => {
 
   // Drawer selected item
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
 
   const { data, isLoading } = useInventoryList({
     page,
@@ -60,6 +63,11 @@ export const InventoryListScreen: React.FC = () => {
     setCategory('');
     setStockStatus('');
     setPage(1);
+  };
+
+  const handleEditProduct = (product: Product) => {
+    setSelectedProduct(null);
+    setEditingProduct(product);
   };
 
   const columns: Column<Product>[] = [
@@ -98,6 +106,25 @@ export const InventoryListScreen: React.FC = () => {
           />
         );
       },
+    },
+    {
+      key: 'actions',
+      title: 'Actions',
+      flex: 0.8,
+      align: 'center',
+      render: (item) => (
+        <TouchableOpacity
+          accessibilityLabel={`Edit ${item.name}`}
+          onPress={(event: any) => {
+            event?.stopPropagation();
+            handleEditProduct(item);
+          }}
+          style={[styles.editButton, { borderColor: colors.border }]}
+        >
+          <Ionicons name="create-outline" size={14} color={colors.primary} />
+          <Text style={[styles.editButtonText, { color: colors.primary }]}>Edit</Text>
+        </TouchableOpacity>
+      ),
     },
   ];
 
@@ -244,6 +271,13 @@ export const InventoryListScreen: React.FC = () => {
 
             <View style={styles.drawerActions}>
               <Button
+                title="Edit Item"
+                icon="create-outline"
+                variant="outline"
+                onPress={() => handleEditProduct(selectedProduct)}
+                style={{ flex: 1 }}
+              />
+              <Button
                 title="View Full Stock History"
                 onPress={() => {
                   setSelectedProduct(null);
@@ -259,6 +293,12 @@ export const InventoryListScreen: React.FC = () => {
       <IngredientCreateModal
         visible={ingModalVisible}
         onClose={() => setIngModalVisible(false)}
+      />
+
+      <InventoryEditModal
+        visible={!!editingProduct}
+        product={editingProduct}
+        onClose={() => setEditingProduct(null)}
       />
     </ScreenContainer>
   );
@@ -311,7 +351,23 @@ const styles = StyleSheet.create({
     marginVertical: spacing.sm,
   },
   drawerActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
     marginTop: spacing.md,
+  },
+  editButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    borderWidth: 1,
+    borderRadius: 4,
+  },
+  editButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
 

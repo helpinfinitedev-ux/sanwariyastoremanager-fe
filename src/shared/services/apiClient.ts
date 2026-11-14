@@ -1,8 +1,21 @@
 import { storage } from "../../storage/mmkv";
 
+declare global {
+  interface Window {
+    __APP_CONFIG__?: { apiUrl?: string };
+  }
+}
+
 const FALLBACK_BASE_URL = "https://sr-backend-xi.vercel.app/api";
 
+// Runtime config (window.__APP_CONFIG__) is written by the container at
+// startup from the Cloud Run env var, so it takes priority over the
+// build-time Vite vars. Change the URL and redeploy — no image rebuild.
+const runtimeBaseUrl =
+  typeof window !== "undefined" ? window.__APP_CONFIG__?.apiUrl : undefined;
+
 const configuredBaseUrl =
+  runtimeBaseUrl ||
   import.meta.env.VITE_PUBLIC_API_URL ||
   import.meta.env.VITE_API_URL ||
   import.meta.env.EXPO_PUBLIC_API_URL;

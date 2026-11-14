@@ -85,7 +85,21 @@ export const StockMovementReportScreen: React.FC = () => {
           subtitle="Audit complete inventory flow across restocking, kitchen dispatches, waste, and adjustments"
           onBack={() => navigation.goBack()}
         >
-          <ExportButton reportName="Stock Movement Audit Report" />
+          <ExportButton
+            reportName="Stock Movement Audit Report"
+            summary={[
+              { label: 'Total Ledger Movements', value: data.summary?.totalMovements || 0 },
+              { label: 'Total IN Units', value: formatNumber(data.summary?.totalInQuantity || 0, 2) },
+              { label: 'Total OUT Units', value: formatNumber(data.summary?.totalOutQuantity || 0, 2) },
+            ]}
+            dateRange={{ startDate, endDate }}
+            rows={data.byMovementType || []}
+            columns={[
+              { header: 'Movement Type', value: (row) => row.movementType.replaceAll('_', ' '), width: 2 },
+              { header: 'Net Cumulative Units', value: (row) => formatNumber(row.quantity, 2), width: 1.4, align: 'right' },
+              { header: 'Transaction Entries', value: (row) => row.count, width: 1.2, align: 'right' },
+            ]}
+          />
         </PageHeader>
 
         {/* Date Filter Panel */}

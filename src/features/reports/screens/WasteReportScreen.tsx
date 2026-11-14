@@ -85,7 +85,19 @@ export const WasteReportScreen: React.FC = () => {
           subtitle="Report on material shrinkage, decay, and direct financial losses"
           onBack={() => navigation.goBack()}
         >
-          <ExportButton reportName="Waste Loss Report" />
+          <ExportButton
+            reportName="Waste Loss Report"
+            summary={data.kpis}
+            dateRange={{ startDate, endDate }}
+            rows={data.tableData}
+            columns={[
+              { header: 'Waste Date', value: (row) => formatDate(row.date, 'MMM DD, YYYY'), width: 1.2 },
+              { header: 'Reason', value: (row) => row.reason, width: 1.2 },
+              { header: 'Items', value: (row) => row.itemsCount, width: 0.7, align: 'center' },
+              { header: 'Waste Items', value: (row) => row.itemsList, width: 3.2 },
+              { header: 'Notes', value: (row) => row.notes || '-', width: 2.2 },
+            ]}
+          />
         </PageHeader>
 
         {/* Date Filter Panel */}

@@ -94,7 +94,24 @@ export const VendorPayablesReportScreen: React.FC = () => {
           subtitle="Audit procurement invoices, settled payment vouchers, and FIFO outstanding liabilities"
           onBack={() => navigation.goBack()}
         >
-          <ExportButton reportName="Vendor Payables Report" />
+          <ExportButton
+            reportName="Vendor Payables Report"
+            summary={[
+              { label: 'Gross Procurement', value: formatCurrency(data.summary?.totalPurchases || 0) },
+              { label: 'Settled Disbursements', value: formatCurrency(data.summary?.totalPayments || 0) },
+              { label: 'Total Outstanding Due', value: formatCurrency(data.summary?.totalOutstanding || 0) },
+              { label: 'Active Vendor Count', value: data.summary?.activeVendorsCount || 0 },
+            ]}
+            rows={data.vendors || []}
+            columns={[
+              { header: 'Supplier Partner', value: (row) => row.vendorName, width: 1.8 },
+              { header: 'Contact Person', value: (row) => row.contactPerson || '-', width: 1.4 },
+              { header: 'Phone Number', value: (row) => row.phone || '-', width: 1.2 },
+              { header: 'Gross Purchases', value: (row) => formatCurrency(row.totalPurchases), width: 1.3, align: 'right' },
+              { header: 'Settled Paid', value: (row) => formatCurrency(row.totalPayments), width: 1.3, align: 'right' },
+              { header: 'Balance Due', value: (row) => formatCurrency(row.outstanding), width: 1.3, align: 'right' },
+            ]}
+          />
         </PageHeader>
 
         {/* KPIs Strip */}

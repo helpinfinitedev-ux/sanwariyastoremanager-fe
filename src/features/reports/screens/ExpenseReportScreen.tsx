@@ -87,7 +87,24 @@ export const ExpenseReportScreen: React.FC = () => {
           subtitle="Audit non-inventory operational overheads, vendor bills, and utility spends"
           onBack={() => navigation.goBack()}
         >
-          <ExportButton reportName="Operating Expense Report" />
+          <ExportButton
+            reportName="Operating Expense Report"
+            summary={[
+              { label: 'Total Outlay Spent', value: formatCurrency(data.summary?.totalExpense || 0) },
+              { label: 'Expense Count', value: data.summary?.expenseCount || 0 },
+              { label: 'Average Expense Rate', value: formatCurrency(data.summary?.avgExpense || 0) },
+            ]}
+            dateRange={{ startDate, endDate }}
+            rows={data.tableData || []}
+            columns={[
+              { header: 'Expense Date', value: (row) => formatDate(row.date, 'MMM DD, YYYY'), width: 1.2 },
+              { header: 'Category', value: (row) => row.category, width: 1.3 },
+              { header: 'Amount', value: (row) => formatCurrency(row.amount), width: 1.1, align: 'right' },
+              { header: 'Payment Method', value: (row) => row.paymentMethod, width: 1.2 },
+              { header: 'Description', value: (row) => row.description || '-', width: 2.3 },
+              { header: 'Recorded By', value: (row) => row.recordedBy, width: 1.3 },
+            ]}
+          />
         </PageHeader>
 
         {/* Date Filter Panel */}

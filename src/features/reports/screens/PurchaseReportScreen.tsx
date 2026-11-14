@@ -86,7 +86,21 @@ export const PurchaseReportScreen: React.FC = () => {
           subtitle="Report on material inflows and spends"
           onBack={() => navigation.goBack()}
         >
-          <ExportButton reportName="Restock Purchase Report" />
+          <ExportButton
+            reportName="Restock Purchase Report"
+            summary={data.kpis}
+            dateRange={{ startDate, endDate }}
+            rows={data.tableData}
+            columns={[
+              { header: 'Billing Date', value: (row) => formatDate(row.date, 'MMM DD, YYYY'), width: 1.3 },
+              { header: 'Invoice Ref', value: (row) => row.invoiceNo, width: 1.2 },
+              { header: 'Vendor Partner', value: (row) => row.vendor, width: 2 },
+              { header: 'Items', value: (row) => row.itemsCount, width: 0.8, align: 'center' },
+              { header: 'Billed Amount', value: (row) => formatCurrency(row.amount), width: 1.3, align: 'right' },
+              { header: 'Paid', value: (row) => formatCurrency(row.paidAmount || 0), width: 1.2, align: 'right' },
+              { header: 'Due', value: (row) => formatCurrency(row.dueAmount || 0), width: 1.2, align: 'right' },
+            ]}
+          />
         </PageHeader>
 
         {/* Date Filter Panel */}

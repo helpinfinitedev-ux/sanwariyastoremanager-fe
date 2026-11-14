@@ -74,7 +74,18 @@ export const KitchenIssueReportScreen: React.FC = () => {
           subtitle="Report on material dispatches and section consumptions"
           onBack={() => navigation.goBack()}
         >
-          <ExportButton reportName="Kitchen Dispatch Report" />
+          <ExportButton
+            reportName="Kitchen Dispatch Report"
+            summary={data.kpis}
+            dateRange={{ startDate, endDate }}
+            rows={data.tableData}
+            columns={[
+              { header: 'Dispatch Date', value: (row) => formatDate(row.date, 'MMM DD, YYYY'), width: 1.3 },
+              { header: 'Target Section', value: (row) => row.section, width: 1.5 },
+              { header: 'Products', value: (row) => row.itemsCount, width: 0.8, align: 'center' },
+              { header: 'Issued Ingredients', value: (row) => row.itemsList, width: 4 },
+            ]}
+          />
         </PageHeader>
 
         {/* Date Filter Panel */}

@@ -83,7 +83,19 @@ export const InventoryReportScreen: React.FC = () => {
           subtitle="Audit asset holdings, safety limits, and categories allocations"
           onBack={() => navigation.goBack()}
         >
-          <ExportButton reportName="Inventory Valuation Report" />
+          <ExportButton
+            reportName="Inventory Valuation Report"
+            summary={data.kpis}
+            rows={data.tableData}
+            columns={[
+              { header: 'SKU', value: (row) => row.sku, width: 1.1 },
+              { header: 'Product Name', value: (row) => row.name, width: 2 },
+              { header: 'Category', value: (row) => row.category, width: 1.4 },
+              { header: 'Current Stock', value: (row) => row.stock, width: 1.1, align: 'right' },
+              { header: 'Cost Basis', value: (row) => formatCurrency(row.rate), width: 1.2, align: 'right' },
+              { header: 'Valuation', value: (row) => formatCurrency(row.valuation), width: 1.3, align: 'right' },
+            ]}
+          />
         </PageHeader>
 
         {/* KPIs Strip */}
